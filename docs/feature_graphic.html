@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nuclear MOTD Feature Graphic</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            background: #f0f0f0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        .container {
+            text-align: center;
+        }
+        .feature-graphic {
+            width: 1024px;
+            height: 500px;
+            background: linear-gradient(135deg, #2E5BFF 0%, #1E3A8A 100%);
+            display: flex;
+            align-items: center;
+            padding: 60px 80px;
+            gap: 40px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+        .icon-container {
+            flex-shrink: 0;
+        }
+        .app-icon {
+            width: 180px;
+            height: 180px;
+            background: white;
+            border-radius: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+        }
+        .atom-icon {
+            width: 140px;
+            height: 140px;
+        }
+        .text-container {
+            flex: 1;
+            text-align: left;
+        }
+        .title {
+            font-size: 96px;
+            font-weight: 800;
+            color: white;
+            line-height: 1.1;
+            margin-bottom: 20px;
+            letter-spacing: -2px;
+        }
+        .subtitle1 {
+            font-size: 32px;
+            font-weight: 500;
+            color: rgba(255, 255, 255, 0.95);
+            margin-bottom: 12px;
+            letter-spacing: 0.5px;
+        }
+        .subtitle2 {
+            font-size: 28px;
+            font-weight: 400;
+            color: rgba(255, 255, 255, 0.85);
+            letter-spacing: 0.3px;
+        }
+        .instructions {
+            margin-top: 30px;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            max-width: 1024px;
+        }
+        .instructions h3 {
+            margin-bottom: 10px;
+            color: #1E3A8A;
+        }
+        .instructions ol {
+            margin-left: 20px;
+            line-height: 1.8;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="feature-graphic" id="graphic">
+            <div class="icon-container">
+                <div class="app-icon">
+                    <!-- Atomic Symbol Icon -->
+                    <svg class="atom-icon" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <!-- Nucleus (center circle) -->
+                        <circle cx="100" cy="100" r="18" fill="#2E5BFF"/>
+
+                        <!-- Electron orbits -->
+                        <!-- Orbit 1 -->
+                        <ellipse cx="100" cy="100" rx="70" ry="35"
+                                 stroke="#2E5BFF" stroke-width="6" fill="none"
+                                 transform="rotate(0 100 100)"/>
+                        <!-- Orbit 2 -->
+                        <ellipse cx="100" cy="100" rx="70" ry="35"
+                                 stroke="#2E5BFF" stroke-width="6" fill="none"
+                                 transform="rotate(60 100 100)"/>
+                        <!-- Orbit 3 -->
+                        <ellipse cx="100" cy="100" rx="70" ry="35"
+                                 stroke="#2E5BFF" stroke-width="6" fill="none"
+                                 transform="rotate(120 100 100)"/>
+
+                        <!-- Electrons (small circles on orbits) -->
+                        <circle cx="170" cy="100" r="12" fill="#2E5BFF"/>
+                        <circle cx="30" cy="100" r="12" fill="#2E5BFF"/>
+                        <circle cx="135" cy="160" r="12" fill="#2E5BFF"/>
+                    </svg>
+                </div>
+            </div>
+            <div class="text-container">
+                <div class="title">Nuclear MOTD</div>
+                <div class="subtitle1">Nuclear Industry Information Messages</div>
+                <div class="subtitle2">Insights and Experience from Industry Professionals</div>
+            </div>
+        </div>
+
+        <div class="instructions">
+            <h3>Instructions to Generate Feature Graphic:</h3>
+            <ol>
+                <li>Open this HTML file in your browser (Chrome recommended)</li>
+                <li>Right-click on the blue graphic above</li>
+                <li>Select "Inspect" or "Inspect Element"</li>
+                <li>In DevTools, right-click on the <code>&lt;div class="feature-graphic"&gt;</code> element</li>
+                <li>Choose "Capture node screenshot" (Chrome) or use browser extension to screenshot the exact element</li>
+                <li>Alternative: Take a screenshot and crop to exactly 1024x500 pixels</li>
+                <li>Save as PNG and upload to Google Play Console</li>
+            </ol>
+            <p><strong>Or use online tool:</strong> Open this file and use a screenshot tool like Nimbus Screenshot or GoFullPage to capture just the blue graphic area.</p>
+        </div>
+    </div>
+</body>
+</html>

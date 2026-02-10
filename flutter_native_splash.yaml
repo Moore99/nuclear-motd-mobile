@@ -1,0 +1,38 @@
+flutter_native_splash:
+  # Splash screen background color
+  color: "#1565C0"
+  
+  # Dark mode color
+  color_dark: "#0D47A1"
+  
+  # Splash image (centered)
+  image: assets/icons/splash_icon.png
+  
+  # Dark mode image
+  image_dark: assets/icons/splash_icon.png
+  
+  # Branding image at bottom (optional)
+  # branding: assets/icons/branding.png
+  
+  # Android 12+ specific
+  android_12:
+    color: "#1565C0"
+    color_dark: "#0D47A1"
+    image: assets/icons/splash_icon.png
+    image_dark: assets/icons/splash_icon.png
+    icon_background_color: "#1565C0"
+    icon_background_color_dark: "#0D47A1"
+  
+  # Platforms to generate
+  android: true
+  ios: true
+  web: false
+  
+  # Keep full screen on iOS
+  ios_content_mode: center
+  
+  # Android gravity
+  android_gravity: center
+  
+  # Fullscreen mode
+  fullscreen: true

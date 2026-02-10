@@ -1,0 +1,233 @@
+=== GOOGLE PLAY INTERNAL TESTING SETUP GUIDE ===
+
+CURRENT APP INFO:
+- App Name: Nuclear MOTD
+- Package: com.nuclearmotd.app (check android/app/build.gradle)
+- Current Version: 0.9.0+1
+- Platform: Android
+
+═══════════════════════════════════════════════════════════
+
+STEP 1: BUILD AAB FILE
+═══════════════════════════════════════════════════════════
+
+Run this command:
+  cd C:\Projects\nuclear-motd-mobile
+  .\build_for_playstore.ps1
+
+This will:
+  ✓ Build an AAB (Android App Bundle) file
+  ✓ Copy it to your Desktop as "nuclear-motd-release.aab"
+  ✓ Show you the file size and location
+
+═══════════════════════════════════════════════════════════
+
+STEP 2: GOOGLE PLAY CONSOLE - CREATE APP
+═══════════════════════════════════════════════════════════
+
+1. Go to: https://play.google.com/console
+
+2. Click "Create app"
+
+3. Fill in details:
+   App name: Nuclear MOTD
+   Default language: English (Canada)
+   App or game: App
+   Free or paid: Free
+   
+4. Accept declarations:
+   ☑ I confirm this app complies with Google Play policies
+   ☑ I confirm this app complies with US export laws
+
+5. Click "Create app"
+
+═══════════════════════════════════════════════════════════
+
+STEP 3: COMPLETE REQUIRED SECTIONS (for testing)
+═══════════════════════════════════════════════════════════
+
+MINIMUM REQUIRED FOR INTERNAL TESTING:
+
+A) App Access:
+   - All functionality available without restrictions
+   - No special access needed
+   
+B) Ads:
+   - Select "No, my app does not contain ads"
+   
+C) Content Rating:
+   - Click "Start questionnaire"
+   - Email: your email
+   - App category: "Utility, Productivity, Communication, or Other"
+   - Target age: "18 and older"
+   - Complete remaining questions (all "No" for standard business app)
+   - Click "Save" then "Submit"
+   
+D) Target Audience:
+   - Age: "18 and older"
+   - Appeal to children: "No"
+   
+E) Store Presence:
+   - App name: Nuclear MOTD
+   - Short description: Daily messages for the nuclear industry
+   - Full description: 
+     "Nuclear MOTD delivers daily educational and motivational messages 
+      specifically curated for professionals in the nuclear energy sector.
+      Stay informed with industry insights, safety reminders, and 
+      professional development content."
+
+═══════════════════════════════════════════════════════════
+
+STEP 4: SET UP INTERNAL TESTING TRACK
+═══════════════════════════════════════════════════════════
+
+1. In left menu: Testing > Internal testing
+
+2. Click "Create new release"
+
+3. Upload your AAB:
+   - Click "Upload" button
+   - Select: C:\Users\YourName\Desktop\nuclear-motd-release.aab
+   - Wait for upload and processing (1-5 minutes)
+   
+4. Release details:
+   Release name: "0.9.0 (1)" or "Internal Test v1"
+   Release notes: 
+     "Initial internal testing release
+      - User authentication
+      - Message viewing and scheduling
+      - Content submission"
+
+5. Click "Save" (not "Review release" yet)
+
+═══════════════════════════════════════════════════════════
+
+STEP 5: ADD INTERNAL TESTERS
+═══════════════════════════════════════════════════════════
+
+1. Still in "Internal testing", scroll to "Testers" section
+
+2. Click "Create email list"
+
+3. List details:
+   List name: "Nuclear MOTD Team"
+   
+4. Add tester emails (one per line):
+   johnhmoore@proton.me
+   [add other team members]
+   
+5. Click "Save changes"
+
+6. Select your email list for this release
+
+7. Copy the "Copy link" - this is the opt-in URL for testers
+
+═══════════════════════════════════════════════════════════
+
+STEP 6: REVIEW AND ROLLOUT
+═══════════════════════════════════════════════════════════
+
+1. Click "Review release"
+
+2. Verify everything looks good:
+   ✓ AAB uploaded
+   ✓ Version correct
+   ✓ Testers added
+   
+3. Click "Start rollout to Internal testing"
+
+4. Confirm: "Rollout"
+
+STATUS: Release is now live for internal testers!
+
+═══════════════════════════════════════════════════════════
+
+STEP 7: INVITE TESTERS
+═══════════════════════════════════════════════════════════
+
+Send this to your testers:
+
+---
+Subject: Nuclear MOTD App - Internal Testing Invitation
+
+Hi,
+
+You've been invited to test the Nuclear MOTD mobile app!
+
+1. Click this link to opt-in: [PASTE OPT-IN LINK FROM STEP 5]
+
+2. Accept the invitation
+
+3. Open the Google Play Store on your Android device
+
+4. Search for "Nuclear MOTD" or use the link provided after opt-in
+
+5. Install the app
+
+The app will automatically update when new versions are released.
+
+Please report any issues or feedback!
+
+Thanks,
+[Your name]
+---
+
+═══════════════════════════════════════════════════════════
+
+TROUBLESHOOTING
+═══════════════════════════════════════════════════════════
+
+Q: Testers can't find the app in Play Store?
+A: Make sure they:
+   - Clicked the opt-in link first
+   - Are using the same Google account
+   - Wait 5-10 minutes after opting in
+
+Q: Upload rejected?
+A: Check:
+   - Build number must increment (0.9.0+2, 0.9.0+3, etc.)
+   - AAB file is signed properly
+   - Package name matches
+
+Q: Need to upload new version?
+A: Run:
+   cd C:\Projects\nuclear-motd-mobile
+   .\increment_version.ps1
+   .\build_for_playstore.ps1
+   Then create new release in Play Console
+
+═══════════════════════════════════════════════════════════
+
+FUTURE RELEASES (Internal Testing)
+═══════════════════════════════════════════════════════════
+
+For each new version:
+
+1. Make your code changes
+2. Run: .\increment_version.ps1 
+3. Run: .\build_for_playstore.ps1
+4. In Play Console: Testing > Internal testing > Create new release
+5. Upload new AAB
+6. Add release notes
+7. Start rollout
+8. Testers get automatic update on their devices
+
+═══════════════════════════════════════════════════════════
+
+READY FOR PRODUCTION?
+═══════════════════════════════════════════════════════════
+
+When ready to go public:
+
+1. Complete ALL app content requirements:
+   - Privacy policy (https://nuclear-motd.com/privacy)
+   - Data safety section
+   - Store listing (screenshots, icon, graphics)
+   - Complete all policy declarations
+   
+2. Production > Create new release
+3. Upload AAB (increment version again)
+4. Submit for review (takes 1-7 days)
+5. Once approved, you control rollout percentage
+
+═══════════════════════════════════════════════════════════

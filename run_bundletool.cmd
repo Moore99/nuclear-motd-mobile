@@ -1,0 +1,2 @@
+"C:\Program Files\Eclipse Adoptium\jdk-17.0.17.10-hotspot\bin\java.exe" -jar bundletool-all-1.18.3.jar dump manifest --bundle build\app\outputs\bundle\release\app-release.aab --output manifest.xml
+pause

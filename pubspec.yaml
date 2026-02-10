@@ -1,0 +1,82 @@
+name: nuclear_motd
+description: Nuclear MOTD - Daily messages for the nuclear industry
+publish_to: "none"
+version: 0.9.5+13
+
+environment:
+  sdk: ">=3.2.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # UI & Icons
+  cupertino_icons: ^1.0.6
+  flutter_svg: ^2.0.9
+  cached_network_image: ^3.3.1
+  shimmer: ^3.0.0
+
+  # State Management
+  flutter_riverpod: ^2.4.9
+  riverpod_annotation: ^2.3.3
+
+  # Navigation
+  go_router: ^13.1.0
+
+  # Networking
+  dio: ^5.4.0
+  json_annotation: ^4.8.1
+
+  # Local Storage
+  flutter_secure_storage: ^9.0.0
+  shared_preferences: ^2.2.2
+  hive: ^2.2.3
+  hive_flutter: ^1.1.0
+
+  # Push Notifications
+  firebase_core: ^2.24.2
+  firebase_messaging: ^14.7.10
+
+  # Ads (Google AdMob - unobtrusive)
+  google_mobile_ads: ^4.0.0
+
+  # Utilities
+  url_launcher: ^6.2.3
+  package_info_plus: ^5.0.1
+  connectivity_plus: ^5.0.2
+  flutter_html: ^3.0.0-beta.2
+  share_plus: ^7.2.1
+  local_auth: ^2.1.8
+
+  # Form validation
+  form_builder_validators: ^11.0.0
+  flutter_app_badger: ^1.5.0
+  flutter_local_notifications: ^18.0.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.1
+  build_runner: ^2.4.8
+  json_serializable: ^6.7.1
+  riverpod_generator: ^2.3.9
+  hive_generator: ^2.0.1
+  flutter_launcher_icons: ^0.13.1
+  flutter_native_splash: ^2.3.8
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/images/
+    - assets/icons/
+
+  # Note: Custom fonts are optional. Comment out if not using:
+  # fonts:
+  #   - family: Roboto
+  #     fonts:
+  #       - asset: assets/fonts/Roboto-Regular.ttf
+  #       - asset: assets/fonts/Roboto-Medium.ttf
+  #         weight: 500
+  #       - asset: assets/fonts/Roboto-Bold.ttf
+  #         weight: 700

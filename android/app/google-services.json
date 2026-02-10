@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "505374206804",
+    "project_id": "nuclear-motd",
+    "storage_bucket": "nuclear-motd.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:505374206804:android:41b14966d57106b9e476c1",
+        "android_client_info": {
+          "package_name": "com.nuclearmotd.mobile"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB9BsMN9ICADTXUvpyAo4FqXyl6sAYL1NM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

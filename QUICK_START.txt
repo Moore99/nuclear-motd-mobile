@@ -1,0 +1,201 @@
+=== QUICK START: Google Play Internal Testing ===
+
+Your app is configured and ready!
+
+APP DETAILS:
+✓ Package ID: com.nuclearmotd.app
+✓ Current Version: 0.9.0+1
+✓ Signing: Configured (nuclear-motd-release-key.jks)
+✓ Privacy Policy: https://nuclear-motd.com/privacy (VERIFIED PUBLIC)
+✓ AAB File: Already built and ready
+
+═══════════════════════════════════════════════════════════
+
+STEP-BY-STEP DEPLOYMENT:
+═══════════════════════════════════════════════════════════
+
+1. GO TO PLAY CONSOLE
+   Open: https://play.google.com/console
+   
+   If app doesn't exist:
+   - Click "Create app"
+   - Name: Nuclear MOTD
+   - Language: English (Canada)
+   - Type: App, Free
+   - Accept policies
+
+2. COMPLETE MINIMUM REQUIREMENTS FOR TESTING
+   
+   A) APP ACCESS (Policy > App access)
+      Select: "All functionality is available without special access"
+      
+      Explanation to provide:
+      "Nuclear MOTD is a professional communication platform for the 
+      nuclear industry. Users can create a free account directly in 
+      the app - no special credentials required. Test accounts can be 
+      created using any email address during the sign-up process."
+      
+      OR if they ask for test credentials:
+      "Testers can create their own accounts using the sign-up flow 
+      in the app. No pre-configured test accounts are needed."
+
+   B) ADS (Policy > Ads)
+      Select: "No, my app does not contain ads"
+
+   C) CONTENT RATING (Policy > Content rating)
+      - Click "Start questionnaire"
+      - Email: your email
+      - Category: "Utility, Productivity, Communication, or Other"
+      - Is your app primarily designed for children? No
+      - Target age: "18 and older"
+      - Complete remaining questions (all "No" for business app)
+      - Click "Save" then "Submit"
+
+   D) TARGET AUDIENCE (Policy > Target audience and content)
+      - Age: "18 and older"
+      - Appeal to children: "No"
+
+   E) PRIVACY POLICY (Policy > Privacy policy)
+      Enter: https://nuclear-motd.com/privacy
+      
+      ✓ This URL is verified public (no login required)
+      ✓ Opens directly in browser
+      ✓ GDPR & PIPEDA compliant
+
+   F) DATA SAFETY (Policy > Data safety)
+      Data collected:
+      - Email address (required for account)
+      - Name (optional)
+      - Company/department (optional)
+      
+      How data is used:
+      - Account functionality
+      - Personalized content delivery
+      - Analytics (with consent)
+      
+      Data shared: "No data shared with third parties"
+      Encryption: "Data is encrypted in transit and at rest"
+
+3. CREATE INTERNAL TEST RELEASE
+   Testing > Internal testing > Create new release
+   
+   - Upload your existing AAB file
+   - Release name: "0.9.0 (1)" or "Internal Test v1"
+   - Release notes: 
+     "Initial internal testing release
+      - User authentication and account management
+      - Daily message viewing and scheduling
+      - Content submission functionality
+      - Email delivery preferences"
+   
+   - Click "Save" (not "Review release" yet)
+
+4. ADD INTERNAL TESTERS
+   Still in Internal testing > Testers section
+   
+   - Click "Create email list"
+   - List name: "Nuclear MOTD Team"
+   - Add emails (one per line):
+     johnhmoore@proton.me
+     [add other team members]
+   
+   - Click "Save changes"
+   - Select your email list
+   - COPY the opt-in link (you'll need this!)
+
+5. REVIEW AND ROLLOUT
+   - Click "Review release"
+   - Verify everything looks good
+   - Click "Start rollout to Internal testing"
+   - Confirm: "Rollout"
+   
+   ✓ Release is now live for internal testers!
+
+6. INVITE TESTERS
+   Send this email:
+   
+   ---
+   Subject: Nuclear MOTD App - Internal Testing Invitation
+   
+   Hi,
+   
+   You're invited to test the Nuclear MOTD mobile app!
+   
+   1. Click this opt-in link: [PASTE LINK FROM STEP 4]
+   2. Accept the invitation
+   3. Wait 5-10 minutes
+   4. Open Google Play Store on your Android device
+   5. Search "Nuclear MOTD" or use the link from the invitation
+   6. Install the app
+   7. Create your account using the sign-up flow
+   
+   The app will automatically update when new versions are released.
+   
+   Please report any issues or feedback!
+   
+   Thanks,
+   [Your name]
+   ---
+
+═══════════════════════════════════════════════════════════
+
+UPDATING THE APP (for future releases):
+═══════════════════════════════════════════════════════════
+
+1. Make your code changes
+2. Increment version:
+   .\increment_version.ps1
+   
+3. Build new AAB:
+   .\build_for_playstore.ps1
+   
+4. In Play Console:
+   Testing > Internal testing > Create new release
+   Upload new AAB > Add notes > Start rollout
+
+5. Testers get automatic update!
+
+═══════════════════════════════════════════════════════════
+
+IMPORTANT NOTES:
+═══════════════════════════════════════════════════════════
+
+✓ Privacy policy is publicly accessible (verified)
+✓ Each upload needs a new build number (0.9.0+2, 0.9.0+3, etc.)
+✓ AAB processing takes 1-5 minutes after upload
+✓ Testers must use opt-in link before they can install
+✓ Internal testing has no review process (instant)
+✓ Can have up to 100 internal testers
+✓ No special test credentials needed - testers create own accounts
+
+═══════════════════════════════════════════════════════════
+
+TROUBLESHOOTING:
+═══════════════════════════════════════════════════════════
+
+Problem: "Upload failed - duplicate version"
+Fix: Run .\increment_version.ps1 first
+
+Problem: Testers can't find app
+Fix: Make sure they clicked opt-in link and waited 10 min
+
+Problem: Google asks about test accounts
+Fix: Explain users can create their own accounts via sign-up
+
+Problem: Privacy policy not accessible
+Fix: Already verified - https://nuclear-motd.com/privacy works!
+
+═══════════════════════════════════════════════════════════
+
+READY TO UPLOAD?
+═══════════════════════════════════════════════════════════
+
+You have everything you need:
+✓ AAB file built
+✓ Privacy policy URL: https://nuclear-motd.com/privacy
+✓ App access instructions ready
+✓ All policies ready to answer
+
+Go to: https://play.google.com/console
+
+Good luck! 🚀
