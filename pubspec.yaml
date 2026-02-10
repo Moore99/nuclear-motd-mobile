@@ -41,11 +41,11 @@ dependencies:
   google_mobile_ads: ^5.1.0
 
   # Utilities
-  url_launcher: ^6.2.3
-  package_info_plus: ^5.0.1
-  connectivity_plus: ^5.0.2
+  url_launcher: ^6.3.0
+  package_info_plus: ^9.0.0
+  connectivity_plus: ^6.1.0
   flutter_html: ^3.0.0-beta.2
-  share_plus: ^7.2.1
+  share_plus: ^10.0.0
   local_auth: ^2.1.8
 
   # Form validation
