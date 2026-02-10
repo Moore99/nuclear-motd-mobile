@@ -10,7 +10,7 @@ const String messagesBoxName = 'messages_cache';
 const String dashboardBoxName = 'dashboard_cache';
 
 /// Connectivity provider
-final connectivityProvider = StreamProvider<ConnectivityResult>((ref) {
+final connectivityProvider = StreamProvider<List<ConnectivityResult>>((ref) {
   return Connectivity().onConnectivityChanged;
 });
 
@@ -18,7 +18,7 @@ final connectivityProvider = StreamProvider<ConnectivityResult>((ref) {
 final isOnlineProvider = Provider<bool>((ref) {
   final connectivity = ref.watch(connectivityProvider);
   return connectivity.when(
-    data: (result) => result != ConnectivityResult.none,
+    data: (results) => results.isNotEmpty && !results.contains(ConnectivityResult.none),
     loading: () => true, // Assume online while loading
     error: (_, __) => true, // Assume online on error
   );
