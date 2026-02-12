@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:flutter_app_badger/flutter_app_badger.dart';
+import 'package:app_badge_plus/app_badge_plus.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -149,7 +149,7 @@ class NotificationService {
       if (!badgeEnabled) {
         print('📱 Badge disabled in settings');
         // Remove badge if disabled
-        await FlutterAppBadger.removeBadge();
+        await AppBadgePlus.updateBadge(0);
         return;
       }
 
@@ -160,7 +160,7 @@ class NotificationService {
       // Update app icon badge
       if (unreadCount > 0) {
         // Try to update badge count (works on most devices)
-        await FlutterAppBadger.updateBadgeCount(unreadCount);
+        await AppBadgePlus.updateBadge(unreadCount);
 
         // For Samsung devices, also post a silent notification with badge number
         if (Platform.isAndroid) {
@@ -169,7 +169,7 @@ class NotificationService {
 
         print('📱 Badge updated to: $unreadCount');
       } else {
-        await FlutterAppBadger.removeBadge();
+        await AppBadgePlus.updateBadge(0);
 
         // Cancel all notifications to clear badge on Samsung
         if (Platform.isAndroid) {
@@ -260,7 +260,7 @@ class NotificationService {
     if (enabled) {
       await _updateBadge();
     } else {
-      await FlutterAppBadger.removeBadge();
+      await AppBadgePlus.updateBadge(0);
       print('📱 Badge disabled');
     }
   }
