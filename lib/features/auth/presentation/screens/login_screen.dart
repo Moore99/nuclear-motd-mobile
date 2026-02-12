@@ -94,10 +94,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     try {
       final authenticated = await _localAuth.authenticate(
         localizedReason: 'Sign in to Nuclear MOTD',
-        options: const AuthenticationOptions(
-          stickyAuth: true,
-          biometricOnly: true,
-        ),
+        persistAcrossBackgrounding: true,
       );
 
       if (authenticated) {
@@ -152,7 +149,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         // Update provider
         ref.read(authTokenProvider.notifier).state = data['access_token'];
 
-        // Always save credentials – needed for silent re-login on 401
+        // Always save credentials ï¿½ needed for silent re-login on 401
         // and for biometric login on next app open.
         final storage = ref.read(secureStorageProvider);
         await storage.write(key: 'saved_email', value: _emailController.text.trim());

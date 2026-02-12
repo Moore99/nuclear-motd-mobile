@@ -81,10 +81,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       try {
         final authenticated = await _localAuth.authenticate(
           localizedReason: 'Verify your identity to enable biometric login',
-          options: const AuthenticationOptions(
-            stickyAuth: true,
-            biometricOnly: true,
-          ),
+          persistAcrossBackgrounding: true,
         );
         
         if (authenticated) {

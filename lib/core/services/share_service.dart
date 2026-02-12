@@ -36,10 +36,12 @@ class ShareService {
     final shareText = buffer.toString();
     debugPrint('📤 Final share text: $shareText');
     
-    await Share.share(
-      shareText,
-      subject: title,
-      sharePositionOrigin: sharePositionOrigin,
+    await SharePlus.instance.share(
+      ShareParams(
+        text: shareText,
+        subject: title,
+        sharePositionOrigin: sharePositionOrigin,
+      ),
     );
   }
 
@@ -51,10 +53,12 @@ class ShareService {
   }) async {
     final text = title != null ? '$title\n\n$url' : url;
     
-    await Share.share(
-      text,
-      subject: title,
-      sharePositionOrigin: sharePositionOrigin,
+    await SharePlus.instance.share(
+      ShareParams(
+        text: text,
+        subject: title,
+        sharePositionOrigin: sharePositionOrigin,
+      ),
     );
   }
 

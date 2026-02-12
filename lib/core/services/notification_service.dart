@@ -58,7 +58,7 @@ class NotificationService {
       const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
       const initSettings = InitializationSettings(android: androidSettings);
 
-      await _localNotifications.initialize(initSettings);
+      await _localNotifications.initialize(settings: initSettings);
       print('📱 Local notifications initialized');
 
       // Create a notification channel for badge updates
@@ -209,10 +209,10 @@ class NotificationService {
 
       // Always use ID 0 so we only have one silent notification
       await _localNotifications.show(
-        0,
-        'Nuclear MOTD', // Non-empty title required for badge on Samsung
-        '$count unread message${count != 1 ? 's' : ''}', // Non-empty body
-        notificationDetails,
+        id: 0,
+        title: 'Nuclear MOTD', // Non-empty title required for badge on Samsung
+        body: '$count unread message${count != 1 ? 's' : ''}', // Non-empty body
+        notificationDetails: notificationDetails,
       );
 
       print('📱 Silent notification posted successfully with count: $count');
