@@ -364,7 +364,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 8, vertical: 3),
                             decoration: BoxDecoration(
-                              color: AppColors.secondary.withOpacity(0.1),
+                              color: AppColors.secondary.withValues(alpha:0.1),
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Text(
@@ -401,7 +401,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
             Icon(
               Icons.schedule_outlined,
               size: 48,
-              color: AppColors.primary.withOpacity(0.6),
+              color: AppColors.primary.withValues(alpha:0.6),
             ),
             const SizedBox(height: 16),
             const Text(
@@ -432,7 +432,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha:0.1),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
@@ -464,7 +464,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha:0.1),
         borderRadius: BorderRadius.circular(20),
       ),
       child: Row(

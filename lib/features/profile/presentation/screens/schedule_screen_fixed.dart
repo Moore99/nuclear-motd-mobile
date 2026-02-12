@@ -179,7 +179,7 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
         children: [
           // Current schedule summary
           Card(
-            color: AppColors.primary.withOpacity(0.05),
+            color: AppColors.primary.withValues(alpha:0.05),
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: Row(
@@ -187,7 +187,7 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: AppColors.primary.withOpacity(0.1),
+                      color: AppColors.primary.withValues(alpha:0.1),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Icon(
@@ -352,7 +352,7 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: isSelected ? AppColors.primary.withOpacity(0.1) : Colors.grey.shade100,
+                  color: isSelected ? AppColors.primary.withValues(alpha:0.1) : Colors.grey.shade100,
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Icon(icon, color: isSelected ? AppColors.primary : Colors.grey.shade600),

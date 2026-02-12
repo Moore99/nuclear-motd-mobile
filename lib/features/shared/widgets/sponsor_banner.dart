@@ -84,7 +84,7 @@ class _SponsorCard extends StatelessWidget {
       color: isDark ? AppColors.sponsorBackgroundDark : AppColors.sponsorBackground,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: tierColor.withOpacity(0.3)),
+        side: BorderSide(color: tierColor.withValues(alpha:0.3)),
       ),
       child: InkWell(
         onTap: () => _handleTap(context),
@@ -120,7 +120,7 @@ class _SponsorCard extends StatelessWidget {
                   width: 48,
                   height: 48,
                   decoration: BoxDecoration(
-                    color: tierColor.withOpacity(0.1),
+                    color: tierColor.withValues(alpha:0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Icon(Icons.business, color: tierColor),
@@ -149,7 +149,7 @@ class _SponsorCard extends StatelessWidget {
                             vertical: 2,
                           ),
                           decoration: BoxDecoration(
-                            color: tierColor.withOpacity(0.1),
+                            color: tierColor.withValues(alpha:0.1),
                             borderRadius: BorderRadius.circular(4),
                           ),
                           child: Text(

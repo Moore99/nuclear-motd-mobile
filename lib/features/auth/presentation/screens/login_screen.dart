@@ -229,13 +229,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                       colors: [
-                        AppColors.primary.withOpacity(isDark ? 0.2 : 0.08),
-                        AppColors.primary.withOpacity(isDark ? 0.1 : 0.03),
+                        AppColors.primary.withValues(alpha:isDark ? 0.2 : 0.08),
+                        AppColors.primary.withValues(alpha:isDark ? 0.1 : 0.03),
                       ],
                     ),
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(
-                      color: AppColors.primary.withOpacity(isDark ? 0.3 : 0.15),
+                      color: AppColors.primary.withValues(alpha:isDark ? 0.3 : 0.15),
                     ),
                   ),
                   child: Column(
@@ -284,9 +284,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: AppColors.error.withOpacity(0.1),
+                      color: AppColors.error.withValues(alpha:0.1),
                       borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: AppColors.error.withOpacity(0.3)),
+                      border: Border.all(color: AppColors.error.withValues(alpha:0.3)),
                     ),
                     child: Row(
                       children: [

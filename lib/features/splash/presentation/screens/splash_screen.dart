@@ -141,7 +141,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                       'Message of the Day',
                       style: TextStyle(
                         fontSize: 16,
-                        color: Colors.white.withOpacity(0.8),
+                        color: Colors.white.withValues(alpha:0.8),
                       ),
                     ),
                     const SizedBox(height: 48),

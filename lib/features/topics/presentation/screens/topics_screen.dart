@@ -136,7 +136,7 @@ class _TopicsScreenState extends ConsumerState<TopicsScreen> {
         // Header - wrapped in flexible container to prevent overflow
         Container(
           padding: const EdgeInsets.all(12),
-          color: AppColors.primary.withOpacity(0.05),
+          color: AppColors.primary.withValues(alpha:0.05),
           child: Row(
             children: [
               Icon(Icons.category, color: AppColors.primary, size: 20),
@@ -156,7 +156,7 @@ class _TopicsScreenState extends ConsumerState<TopicsScreen> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
-                  color: AppColors.secondary.withOpacity(0.1),
+                  color: AppColors.secondary.withValues(alpha:0.1),
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: Text(
@@ -233,7 +233,7 @@ class _TopicsScreenState extends ConsumerState<TopicsScreen> {
             color: Theme.of(context).cardColor,
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.05),
+                color: Colors.black.withValues(alpha:0.05),
                 blurRadius: 10,
                 offset: const Offset(0, -2),
               ),

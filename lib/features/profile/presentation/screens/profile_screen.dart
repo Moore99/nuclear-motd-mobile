@@ -323,7 +323,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               children: [
                 CircleAvatar(
                   radius: 48,
-                  backgroundColor: AppColors.primary.withOpacity(0.1),
+                  backgroundColor: AppColors.primary.withValues(alpha:0.1),
                   child: Text(
                     (profile['name'] ?? 'U')[0].toUpperCase(),
                     style: const TextStyle(
@@ -411,7 +411,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               runSpacing: 8,
               children: topicsList.take(10).map<Widget>((topic) => Chip(
                     label: Text(topic.toString()),
-                    backgroundColor: AppColors.secondary.withOpacity(0.1),
+                    backgroundColor: AppColors.secondary.withValues(alpha:0.1),
                     labelStyle: const TextStyle(
                       color: AppColors.secondary,
                       fontSize: 12,

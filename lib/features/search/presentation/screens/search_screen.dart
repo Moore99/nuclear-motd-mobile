@@ -116,7 +116,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
           cursorColor: Colors.white,
           decoration: InputDecoration(
             hintText: 'Search messages...',
-            hintStyle: TextStyle(color: Colors.white.withOpacity(0.7)),
+            hintStyle: TextStyle(color: Colors.white.withValues(alpha:0.7)),
             border: InputBorder.none,
             suffixIcon: _searchController.text.isNotEmpty
                 ? IconButton(
@@ -332,7 +332,7 @@ class _SearchResultCard extends StatelessWidget {
                           vertical: 3,
                         ),
                         decoration: BoxDecoration(
-                          color: AppColors.primary.withOpacity(0.1),
+                          color: AppColors.primary.withValues(alpha:0.1),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(

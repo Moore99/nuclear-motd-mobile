@@ -71,7 +71,7 @@ class AboutScreen extends StatelessWidget {
                   Text(
                     'Version ${AppConfig.appVersion}',
                     style: TextStyle(
-                      color: Colors.white.withOpacity(0.8),
+                      color: Colors.white.withValues(alpha:0.8),
                       fontSize: 14,
                     ),
                   ),
@@ -119,9 +119,9 @@ class AboutScreen extends StatelessWidget {
               margin: const EdgeInsets.symmetric(horizontal: 24),
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: AppColors.primary.withOpacity(0.05),
+                color: AppColors.primary.withValues(alpha:0.05),
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: AppColors.primary.withOpacity(0.1)),
+                border: Border.all(color: AppColors.primary.withValues(alpha:0.1)),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,

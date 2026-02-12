@@ -32,7 +32,7 @@ class AtomLogo extends StatelessWidget {
         borderRadius: BorderRadius.circular(borderRadius),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.2),
+            color: Colors.black.withValues(alpha:0.2),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
@@ -55,7 +55,7 @@ class AtomLogo extends StatelessWidget {
                     height: orbitHeight,
                     decoration: BoxDecoration(
                       border: Border.all(
-                        color: color.withOpacity(0.5),
+                        color: color.withValues(alpha:0.5),
                         width: 2,
                       ),
                       borderRadius: BorderRadius.circular(orbitHeight / 2),
@@ -116,7 +116,7 @@ class AtomIcon extends StatelessWidget {
                 height: orbitHeight,
                 decoration: BoxDecoration(
                   border: Border.all(
-                    color: iconColor.withOpacity(0.8),
+                    color: iconColor.withValues(alpha:0.8),
                     width: strokeWidth,
                   ),
                   borderRadius: BorderRadius.circular(orbitHeight / 2),
