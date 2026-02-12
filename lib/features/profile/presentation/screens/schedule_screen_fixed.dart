@@ -484,7 +484,7 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: DropdownButtonFormField<String>(
-          value: _availableTimezones.contains(_timezone) ? _timezone : _availableTimezones.first,
+          initialValue: _availableTimezones.contains(_timezone) ? _timezone : _availableTimezones.first,
           decoration: InputDecoration(
             labelText: 'Your Timezone',
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),

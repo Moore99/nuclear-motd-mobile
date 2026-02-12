@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter/foundation.dart';
 import 'package:app_badge_plus/app_badge_plus.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -54,12 +55,12 @@ class NotificationService {
   /// Initialize local notifications (required for Samsung badge support)
   Future<void> _initializeLocalNotifications() async {
     try {
-      print('📱 Initializing local notifications...');
+      debugPrint('📱 Initializing local notifications...');
       const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
       const initSettings = InitializationSettings(android: androidSettings);
 
       await _localNotifications.initialize(settings: initSettings);
-      print('📱 Local notifications initialized');
+      debugPrint('📱 Local notifications initialized');
 
       // Create a notification channel for badge updates
       const androidChannel = AndroidNotificationChannel(
@@ -76,9 +77,9 @@ class NotificationService {
           .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
           ?.createNotificationChannel(androidChannel);
 
-      print('📱 Local notification channel created for badge support');
+      debugPrint('📱 Local notification channel created for badge support');
     } catch (e) {
-      print('📱 Error initializing local notifications: $e');
+      debugPrint('📱 Error initializing local notifications: $e');
     }
   }
 
@@ -92,11 +93,11 @@ class NotificationService {
     );
 
     if (settings.authorizationStatus == AuthorizationStatus.authorized) {
-      print('📱 User granted notification permissions');
+      debugPrint('📱 User granted notification permissions');
     } else if (settings.authorizationStatus == AuthorizationStatus.provisional) {
-      print('📱 User granted provisional notification permissions');
+      debugPrint('📱 User granted provisional notification permissions');
     } else {
-      print('📱 User declined or has not accepted notification permissions');
+      debugPrint('📱 User declined or has not accepted notification permissions');
     }
   }
 
@@ -105,21 +106,21 @@ class NotificationService {
     // Get FCM token
     final token = await _messaging.getToken();
     if (token != null) {
-      print('📱 FCM Token: $token');
+      debugPrint('📱 FCM Token: $token');
       // TODO: Send token to backend to register for push notifications
       // await _apiService.registerFcmToken(token);
     }
 
     // Handle foreground messages
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-      print('📱 Received foreground message: ${message.notification?.title}');
+      debugPrint('📱 Received foreground message: ${message.notification?.title}');
       // When a new message arrives, refresh the unread count
       _updateBadge();
     });
 
     // Handle notification taps when app is in background
     FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
-      print('📱 Notification opened: ${message.notification?.title}');
+      debugPrint('📱 Notification opened: ${message.notification?.title}');
       // Navigate to messages screen
       // TODO: Use router to navigate to messages
     });
@@ -127,7 +128,7 @@ class NotificationService {
     // Handle when app is opened from terminated state
     _messaging.getInitialMessage().then((RemoteMessage? message) {
       if (message != null) {
-        print('📱 App opened from terminated state');
+        debugPrint('📱 App opened from terminated state');
         // Navigate to messages screen
       }
     });
@@ -139,7 +140,7 @@ class NotificationService {
       // Check if user is authenticated
       final token = _ref.read(authTokenProvider);
       if (token == null) {
-        print('📱 User not authenticated, skipping badge update');
+        debugPrint('📱 User not authenticated, skipping badge update');
         return;
       }
 
@@ -147,7 +148,7 @@ class NotificationService {
       final badgeEnabled = prefs.getBool('badge_enabled') ?? true;
 
       if (!badgeEnabled) {
-        print('📱 Badge disabled in settings');
+        debugPrint('📱 Badge disabled in settings');
         // Remove badge if disabled
         await AppBadgePlus.updateBadge(0);
         return;
@@ -155,7 +156,7 @@ class NotificationService {
 
       // Fetch unread count from API
       final unreadCount = await _apiService.getUnreadCount();
-      print('📱 Unread count fetched: $unreadCount');
+      debugPrint('📱 Unread count fetched: $unreadCount');
 
       // Update app icon badge
       if (unreadCount > 0) {
@@ -167,7 +168,7 @@ class NotificationService {
           await _postSilentNotification(unreadCount);
         }
 
-        print('📱 Badge updated to: $unreadCount');
+        debugPrint('📱 Badge updated to: $unreadCount');
       } else {
         await AppBadgePlus.updateBadge(0);
 
@@ -176,12 +177,12 @@ class NotificationService {
           await _localNotifications.cancelAll();
         }
 
-        print('📱 Badge removed (count is 0)');
+        debugPrint('📱 Badge removed (count is 0)');
       }
     } catch (e) {
       // Log the error but don't throw - network errors during periodic sync
       // shouldn't disrupt the user experience
-      print('📱 Error updating badge (will retry later): $e');
+      debugPrint('📱 Error updating badge (will retry later): $e');
       // Silently fail - the next periodic update will retry
     }
   }
@@ -189,7 +190,7 @@ class NotificationService {
   /// Post a silent notification with badge count (for Samsung devices)
   Future<void> _postSilentNotification(int count) async {
     try {
-      print('📱 Posting silent notification with count: $count');
+      debugPrint('📱 Posting silent notification with count: $count');
       final androidDetails = AndroidNotificationDetails(
         _badgeChannelId,
         _badgeChannelName,
@@ -215,9 +216,9 @@ class NotificationService {
         notificationDetails: notificationDetails,
       );
 
-      print('📱 Silent notification posted successfully with count: $count');
+      debugPrint('📱 Silent notification posted successfully with count: $count');
     } catch (e) {
-      print('📱 Error posting silent notification: $e');
+      debugPrint('📱 Error posting silent notification: $e');
     }
   }
 
@@ -248,7 +249,7 @@ class NotificationService {
       _startPeriodicSync();
     } else {
       _syncTimer?.cancel();
-      print('📱 Notifications disabled');
+      debugPrint('📱 Notifications disabled');
     }
   }
 
@@ -261,7 +262,7 @@ class NotificationService {
       await _updateBadge();
     } else {
       await AppBadgePlus.updateBadge(0);
-      print('📱 Badge disabled');
+      debugPrint('📱 Badge disabled');
     }
   }
 

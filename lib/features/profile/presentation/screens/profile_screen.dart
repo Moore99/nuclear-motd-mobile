@@ -468,7 +468,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 subtitle: const Text('Use fingerprint or face to sign in'),
                 value: _biometricsEnabled,
                 onChanged: _toggleBiometrics,
-                activeColor: AppColors.primary,
+                activeThumbColor: AppColors.primary,
               ),
           ]),
           const SizedBox(height: 32),

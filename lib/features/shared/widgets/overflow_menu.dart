@@ -99,7 +99,7 @@ class OverflowMenu extends ConsumerWidget {
                           value ? ThemeMode.dark : ThemeMode.light,
                         );
                       },
-                      activeColor: AppColors.primary,
+                      activeThumbColor: AppColors.primary,
                     ),
                     onTap: () {
                       ref.read(themeModeProvider.notifier).toggle();

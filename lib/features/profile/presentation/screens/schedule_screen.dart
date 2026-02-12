@@ -125,19 +125,17 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return WillPopScope(
-      onWillPop: () async {
-        if (_isSaving) {
+    return PopScope(
+      canPop: !_isSaving,
+      onPopInvokedWithResult: (bool didPop, dynamic result) {
+        if (!didPop) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('Please wait for save to complete'),
               duration: Duration(seconds: 1),
             ),
           );
-          return false;
         }
-        // Allow back navigation - just return true, don't do anything else
-        return true;
       },
       child: Scaffold(
         appBar: AppBar(
@@ -226,7 +224,7 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
                   _hasChanges = true;
                 });
               },
-              activeColor: Colors.orange.shade600,
+              activeThumbColor: Colors.orange.shade600,
             ),
           ),
           const SizedBox(height: 16),
@@ -365,7 +363,11 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
                       if (isWeekly) {
                         _selectedDays = {index};
                       } else {
-                        if (isSelected) _selectedDays.remove(index); else _selectedDays.add(index);
+                        if (isSelected) {
+                          _selectedDays.remove(index);
+                        } else {
+                          _selectedDays.add(index);
+                        }
                       }
                       _hasChanges = true;
                     });
@@ -439,7 +441,7 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: DropdownButtonFormField<String>(
-          value: _availableTimezones.contains(_timezone) ? _timezone : _availableTimezones.first,
+          initialValue: _availableTimezones.contains(_timezone) ? _timezone : _availableTimezones.first,
           decoration: InputDecoration(
             labelText: 'Your Timezone',
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),

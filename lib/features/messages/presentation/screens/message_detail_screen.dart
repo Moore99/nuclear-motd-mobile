@@ -85,15 +85,15 @@ class _MessageDetailScreenState extends ConsumerState<MessageDetailScreen> {
   }
 
   Future<void> _markMessageAsRead() async {
-    print('📱 Marking message ${widget.messageId} as read...');
+    debugPrint('📱 Marking message ${widget.messageId} as read...');
     try {
       final dio = ref.read(dioProvider);
       await dio.post('${AppConfig.messages}/${widget.messageId}/mark-read');
-      print('📱 Message ${widget.messageId} marked as read, refreshing badge and messages list...');
+      debugPrint('📱 Message ${widget.messageId} marked as read, refreshing badge and messages list...');
       ref.read(notificationServiceProvider).refreshBadge();
       ref.invalidate(messagesProvider);
     } catch (e) {
-      print('Failed to mark message as read: $e');
+      debugPrint('Failed to mark message as read: $e');
     }
   }
 

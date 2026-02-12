@@ -317,7 +317,7 @@ class _SubmitContentScreenState extends ConsumerState<SubmitContentScreen> {
                 : _topicsError != null
                     ? Text(_topicsError!, style: const TextStyle(color: AppColors.error))
                     : DropdownButtonFormField<String>(
-                        value: _selectedTopic,
+                        initialValue: _selectedTopic,
                         isExpanded: true,
                         decoration: InputDecoration(
                           hintText: 'Select a topic',
