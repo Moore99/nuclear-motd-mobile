@@ -1,3 +1,6 @@
+# Windows reserved names (OneDrive sync errors)
+nul
+
 # Miscellaneous
 *.class
 *.log
