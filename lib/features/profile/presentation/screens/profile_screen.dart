@@ -190,7 +190,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       );
 
       setState(() => _isEditing = false);
-      ref.refresh(profileProvider);
+      ref.invalidate(profileProvider);
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -391,7 +391,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 onPressed: () async {
                   final result = await context.push(AppRoutes.schedule);
                   if (result == true) {
-                    ref.refresh(profileProvider);
+                    ref.invalidate(profileProvider);
                   }
                 },
                 icon: const Icon(Icons.edit_outlined, size: 18),

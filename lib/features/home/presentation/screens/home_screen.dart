@@ -201,8 +201,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
 
     return RefreshIndicator(
       onRefresh: () async {
-        ref.refresh(dashboardProvider);
-        ref.refresh(recentMessagesProvider);
+        ref.invalidate(dashboardProvider);
+        ref.invalidate(recentMessagesProvider);
       },
       child: SingleChildScrollView(
         physics: const AlwaysScrollableScrollPhysics(),

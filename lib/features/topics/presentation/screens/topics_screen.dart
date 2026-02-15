@@ -38,7 +38,7 @@ class _TopicsScreenState extends ConsumerState<TopicsScreen> {
       );
 
       setState(() => _hasChanges = false);
-      ref.refresh(topicsProvider);
+      ref.invalidate(topicsProvider);
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -257,7 +257,7 @@ class _TopicsScreenState extends ConsumerState<TopicsScreen> {
                 Expanded(
                   child: OutlinedButton(
                     onPressed: () {
-                      final allTopics = (topics as List)
+                      final allTopics = topics
                           .map<String>((t) => t['name'] as String)
                           .toSet();
                       setState(() {

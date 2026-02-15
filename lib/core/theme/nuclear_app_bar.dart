@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'atom_logo.dart';
-import 'app_theme.dart';
 
 /// Custom AppBar with atom logo for Nuclear MOTD
 class NuclearAppBar extends StatelessWidget implements PreferredSizeWidget {

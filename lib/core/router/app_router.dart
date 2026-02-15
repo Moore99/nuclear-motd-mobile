@@ -256,8 +256,8 @@ class MainShell extends ConsumerWidget {
           // Refresh dashboard data when navigating to Home tab
           if (index == 0 && navigationShell.currentIndex != 0) {
             // Force refresh by using refresh instead of invalidate
-            ref.refresh(dashboardProvider);
-            ref.refresh(recentMessagesProvider);
+            ref.invalidate(dashboardProvider);
+            ref.invalidate(recentMessagesProvider);
           }
           navigationShell.goBranch(
             index,

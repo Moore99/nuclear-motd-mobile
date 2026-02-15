@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/cache/message_cache_service.dart';
-import '../../../core/theme/app_theme.dart';
 
 /// Offline indicator banner widget
 class OfflineBanner extends ConsumerWidget {
