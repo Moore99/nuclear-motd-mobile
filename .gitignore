@@ -1,5 +1,6 @@
-# Windows reserved names (OneDrive sync errors)
+# Windows reserved names and artifacts (OneDrive sync errors)
 nul
+_ul
 
 # Miscellaneous
 *.class
