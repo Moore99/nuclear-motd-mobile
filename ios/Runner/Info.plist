@@ -54,6 +54,8 @@
 			<string>fetch</string>
 			<string>remote-notification</string>
 		</array>
+		<key>NSFaceIDUsageDescription</key>
+		<string>Use Face ID to securely sign in to Nuclear MOTD</string>
 		<key>FirebaseAppDelegateProxyEnabled</key>
 		<false/>
 		<key>UIStatusBarHidden</key>
