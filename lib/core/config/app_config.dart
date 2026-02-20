@@ -63,7 +63,7 @@ class AppConfig {
   );
   static const String _adMobAppIdIOSProd = String.fromEnvironment(
     'ADMOB_APP_ID_IOS',
-    defaultValue: 'ca-app-pub-XXXXXXXXXXXXXXXX~ZZZZZZZZZZ',
+    defaultValue: 'ca-app-pub-5119215558360251~3072331258',
   );
 
   // Test IDs for development
@@ -79,7 +79,7 @@ class AppConfig {
   );
   static const String _bannerAdUnitIdIOSProd = String.fromEnvironment(
     'ADMOB_BANNER_IOS',
-    defaultValue: 'ca-app-pub-XXXXXXXXXXXXXXXX/ZZZZZZZZZZ',
+    defaultValue: 'ca-app-pub-5119215558360251/4265847636',
   );
   static const String _nativeAdUnitIdAndroidProd = String.fromEnvironment(
     'ADMOB_NATIVE_ANDROID',
