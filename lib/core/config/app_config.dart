@@ -87,7 +87,7 @@ class AppConfig {
   );
   static const String _nativeAdUnitIdIOSProd = String.fromEnvironment(
     'ADMOB_NATIVE_IOS',
-    defaultValue: 'ca-app-pub-XXXXXXXXXXXXXXXX/ZZZZZZZZZZ',
+    defaultValue: 'ca-app-pub-5119215558360251/6979640884',
   );
 
   // Use test IDs in development, production IDs in release
