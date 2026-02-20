@@ -27,27 +27,17 @@ workflows:
           pod install --repo-update
           cd ..
 
-      - name: Build iOS release
+      - name: Set up code signing
+        script: xcode-project use-profiles
+
+      - name: Build and export IPA
         script: |
           flutter build ios --release \
             --dart-define=ENVIRONMENT=production \
             --no-codesign
-
-      - name: Create Xcode archive
-        script: |
-          xcode-project use-profiles
-          xcodebuild \
-            -workspace ios/Runner.xcworkspace \
-            -scheme Runner \
-            -configuration Release \
-            -archivePath build/Runner.xcarchive \
-            archive
-
-      - name: Export IPA
-        script: |
           xcode-project build-ipa \
             --workspace ios/Runner.xcworkspace \
-            --archive-path build/Runner.xcarchive
+            --scheme Runner
 
     artifacts:
       - build/ios/ipa/*.ipa
