@@ -28,57 +28,32 @@ flutter build apk --release
 "$LOCALAPPDATA/Android/Sdk/platform-tools/adb.exe" shell am force-stop com.nuclearmotd.app
 ```
 
-**View flutter logs:**
+**iOS builds**: No Mac available — all iOS builds go through **Codemagic** (cloud CI).
+Push to GitHub master, then trigger a Codemagic build manually.
+
+**Diagnose compile errors locally (Android):**
 
 ```bash
-flutter logs
+flutter build apk --debug 2>&1 | grep "lib\|Error\|FAILED"
 ```
 
-**Clear flutter logs:**
-
-```bash
-flutter logs --clear
-```
+Note: Local Android builds often fail due to OneDrive file locking on the `build/` directory.
+This is NOT a code error — if no Dart errors appear, the code is fine. Codemagic builds on Mac
+don't have this issue.
 
 ## Testing
 
-**Run all tests:**
-
 ```bash
 flutter test
-```
-
-**Run specific test file:**
-
-```bash
-flutter test test/widget_test.dart
+flutter analyze   # Note: shows false-positive URI errors on Windows — pre-existing, non-blocking
 ```
 
 ## Development Commands
 
-**Install dependencies:**
-
 ```bash
-flutter pub get
-```
-
-**Clean build artifacts:**
-
-```bash
-flutter clean
-```
-
-**Check for issues:**
-
-```bash
+flutter pub get   # After modifying pubspec.yaml
+flutter clean     # Often fails on OneDrive repos due to file locking — usually safe to ignore
 flutter doctor
-```
-
-**List connected devices:**
-
-```bash
-flutter devices
-"$LOCALAPPDATA/Android/Sdk/platform-tools/adb.exe" devices
 ```
 
 ## Architecture Overview
@@ -86,33 +61,48 @@ flutter devices
 ### Core Application Structure
 
 - **Flutter** with **Riverpod** state management
-- **Dio** for HTTP networking with interceptors
+- **Dio** for HTTP networking with auth interceptor (JWT)
 - **Go Router** for navigation
-- **Shared Preferences** for local storage
+- **Shared Preferences** + **MessageCacheService** for local storage/offline
 - **Google Mobile Ads** for monetization
-
-### Key Features
-
-- **Authentication**: JWT token-based auth with auto-refresh
-- **Message List**: Paginated message browsing with read/unread status
-- **Message Detail**: Full message viewing with mark-as-read functionality
-- **Bookmarks**: Local bookmark storage and management
-- **Share**: Native share functionality for messages
-- **Push Notifications**: FCM integration with badge count management
-- **Offline Support**: Message caching for offline viewing
+- **Firebase Messaging** for push notifications
 
 ### Backend Integration
 
-The mobile app connects to the Nuclear MOTD backend API:
+- **Base URL**: `https://nuclear-motd.com` (both production and development — server handles auth)
+- **Dio base URL** is set in `AppConfig.apiBaseUrl`; paths in `AppConfig` are relative (e.g. `/messages`)
+- **Actual server paths** (as seen in server logs — no `/api/mobile/` prefix in URLs):
+  - `POST /auth/login` — authentication
+  - `GET /messages` — all messages (unread-first, deduplicated by message_id)
+  - `GET /messages/{id}` — message detail
+  - `POST /messages/{id}/mark-read` — mark message as read
+  - `GET /unread-count` — unread count
+  - `GET /dashboard` — dashboard stats
+  - `GET /messages?limit=10` — recent messages (home screen)
 
-- **Base URL**: `https://nuclear-motd.com` (production) or `http://localhost:8000` (development)
-- **API Endpoints**:
-  - `/api/mobile/auth/login` - User authentication
-  - `/api/mobile/auth/register` - User registration
-  - `/api/mobile/messages` - Message list with pagination
-  - `/api/mobile/messages/{id}` - Message detail
-  - `/api/mobile/messages/{id}/mark-read` - Mark message as read
-  - `/api/mobile/unread-count` - Get unread message count
+### Key Provider Architecture
+
+```
+messagesProvider (StateNotifierProvider)  ← lib/features/messages/messages_provider.dart
+  └── MessagesNotifier.loadMessages()     ← fetches GET /messages, caches locally
+  └── MessagesNotifier.markLocallyAsRead(id) ← instant optimistic update
+
+unreadCountProvider (Provider<int>)       ← lib/features/shared/widgets/bell_icon.dart
+  └── derives from messagesProvider       ← no API call, instant, always in sync
+```
+
+### Mark-as-Read Flow (build 27+)
+
+1. User opens message → `_hasMarkedAsRead` flag prevents duplicate calls
+2. `Future.microtask(() => _markMessageAsRead())` — runs after build completes
+3. `await dio.post('.../mark-read')` — server marks DB record
+4. `messagesProvider.notifier.markLocallyAsRead(id)` — **instant** UI update (no network)
+5. `notificationServiceProvider.refreshBadge()` — updates app icon badge (async)
+6. `messagesProvider.notifier.loadMessages()` — background server sync
+
+**Why optimistic update?** Server logs showed `GET /messages` (loadMessages) was sometimes
+falling back to stale cache without reaching the server. Optimistic local update ensures
+the UI always reflects the read status immediately.
 
 ## File Structure
 
@@ -120,310 +110,190 @@ The mobile app connects to the Nuclear MOTD backend API:
 lib/
 ├── core/
 │   ├── config/
-│   │   └── app_config.dart          # API endpoints, ad unit IDs
+│   │   └── app_config.dart              # API endpoints, ad unit IDs
 │   ├── network/
-│   │   └── dio_client.dart          # HTTP client with auth interceptor
+│   │   └── dio_client.dart              # Dio client, AuthInterceptor, friendlyMessage extension
 │   ├── router/
-│   │   └── app_router.dart          # Go Router navigation config
+│   │   └── app_router.dart              # Go Router navigation config
 │   ├── services/
-│   │   ├── bookmarks_service.dart   # Bookmark management
-│   │   ├── notification_service.dart # FCM and badge management
-│   │   └── share_service.dart       # Native share functionality
+│   │   ├── bookmarks_service.dart       # Local bookmark storage
+│   │   ├── notification_service.dart    # FCM, app icon badge (AppBadgePlus)
+│   │   └── share_service.dart           # Native share sheet
 │   ├── cache/
-│   │   └── message_cache_service.dart # Offline message caching
+│   │   └── message_cache_service.dart   # Offline message caching (SharedPreferences)
 │   └── theme/
-│       ├── app_theme.dart           # Theme and colors
-│       └── atom_logo.dart           # Custom logo widget
+│       ├── app_theme.dart               # Colors, theme
+│       └── atom_logo.dart               # Custom atom logo widget
 ├── features/
 │   ├── auth/
-│   │   └── presentation/
-│   │       └── screens/
-│   │           ├── login_screen.dart
-│   │           └── register_screen.dart
+│   │   └── presentation/screens/
+│   │       ├── login_screen.dart
+│   │       ├── signup_screen.dart
+│   │       ├── forgot_password_screen.dart
+│   │       └── reset_password_screen.dart
+│   ├── home/
+│   │   └── presentation/screens/
+│   │       └── home_screen.dart         # Dashboard + recent messages + BellIcon in AppBar
 │   ├── messages/
-│   │   └── presentation/
-│   │       └── screens/
-│   │           ├── messages_screen.dart       # Message list with pagination
-│   │           └── message_detail_screen.dart # Message detail with mark-as-read
+│   │   ├── messages_provider.dart       # MessagesNotifier, messagesProvider (shared source)
+│   │   └── presentation/screens/
+│   │       ├── messages_screen.dart     # Full message list, unread filter, pull-to-refresh
+│   │       └── message_detail_screen.dart # Detail view, mark-as-read, bookmark, share
+│   ├── search/
+│   │   └── presentation/screens/
+│   │       └── search_screen.dart
+│   ├── topics/
+│   │   └── presentation/screens/
+│   │       └── topics_screen.dart
+│   ├── profile/
+│   │   └── presentation/screens/
+│   │       ├── profile_screen.dart
+│   │       ├── schedule_screen.dart
+│   │       ├── help_screen.dart
+│   │       ├── about_screen.dart
+│   │       ├── submit_content_screen.dart
+│   │       ├── privacy_policy_screen.dart
+│   │       └── terms_of_service_screen.dart
 │   └── shared/
 │       └── widgets/
-│           ├── sponsor_banner.dart   # AdMob banner ads
-│           ├── overflow_menu.dart    # App menu with logout
-│           └── offline_banner.dart   # Network status indicator
-└── main.dart                         # App entry point
+│           ├── bell_icon.dart           # Bell icon + unreadCountProvider
+│           ├── sponsor_banner.dart      # AdMob banner ads
+│           ├── overflow_menu.dart       # App menu with logout
+│           └── offline_banner.dart      # Network status indicator
+└── main.dart                            # App entry point, Firebase init
 ```
-
-## Common Mistakes Claude Makes
-
-### Flutter Development
-
-- Don't forget to run `flutter pub get` after modifying `pubspec.yaml`
-- Always use `const` constructors where possible for performance
-- Remember to dispose controllers and listeners in `dispose()` method
-- Use `ref.read()` for one-time reads, `ref.watch()` for reactive updates
-- Don't call `setState()` or `ref.read()` during build method - use `Future.microtask()` for side effects
-
-### State Management (Riverpod)
-
-- Use `StateNotifier` for complex state, `StateProvider` for simple values
-- Use `FutureProvider` for async data fetching
-- Use `autoDispose` modifier to prevent memory leaks
-- `ref.invalidate()` to force provider refresh
-- Don't forget to consume `ConsumerWidget` or `ConsumerStatefulWidget` to access `ref`
-
-### Android-Specific Issues
-
-- Always force-stop the app after installing new APK: `adb shell am force-stop com.nuclearmotd.app`
-- Old app versions can persist despite reinstall - check process ID in logs
-- Use `flutter clean` before building if you encounter snapshot errors
-- AdMob ads require factory registration in native Android code
-
-### API Integration
-
-- Always handle `DioException` errors and extract `friendlyMessage` extension
-- Use `ref.read(dioProvider)` to get HTTP client with auth interceptor
-- Mark-as-read should trigger badge refresh: `ref.read(notificationServiceProvider).refreshBadge()`
-- After marking as read, invalidate messages list: `ref.invalidate(messagesProvider)`
-
-### Windows Development Path Issues
-
-- Use forward slashes in paths passed to adb: `"C:/projects/nuclear-motd-mobile/build/..."`
-- Quote paths with spaces when using PowerShell: `"$LOCALAPPDATA/Android/Sdk/platform-tools/adb.exe"`
 
 ## Current Features
 
-### Authentication System
+### Messages
 
-- JWT token-based authentication
-- Automatic token refresh on 401 responses
-- Secure token storage in shared preferences
-- Login/Register screens with form validation
+- All messages loaded at once (no pagination) — server returns unread-first, then by date
+- Client-side unread filter toggle in messages list AppBar
+- Pull-to-refresh
+- Bell icon in home screen AppBar shows live unread count (derives from `messagesProvider`)
+- Reading a message instantly updates its read status in the list and bell count
+- Native ad insertion every 5 messages
 
-### Message Management
+### Mark-as-Read
 
-- **Messages List Screen**:
-  - Paginated loading (20 messages at a time)
-  - "Load More" button for additional messages
-  - Read/unread status badges
-  - Topic tags with color-coded badges
-  - Pull-to-refresh functionality
-  - Native ad insertion (every 5 messages)
-  - Offline caching with fallback
+- Fires automatically when message detail loads (once per screen instance)
+- Optimistic local update for instant UI feedback
+- Server confirmation via `POST /messages/{id}/mark-read`
 
-- **Message Detail Screen**:
-  - Full message content with HTML rendering
-  - Topic badges at top
-  - Message type badge
-  - Created date and status
-  - Bookmark functionality
-  - Share functionality
-  - Citation links (opens in external browser)
-  - **Mark as read**: Automatically marks message as read when viewed
-    - Triggers badge count update
-    - Updates messages list to show "read" status
-    - Only executes once per message view
+### Notifications & Badge
 
-### Offline Support
+- FCM push notifications (Firebase Messaging)
+- App icon badge via `AppBadgePlus` (iOS) and silent local notification (Android/Samsung)
+- Badge syncs every 5 minutes via periodic timer
+- Refreshes after marking a message as read
 
-- Messages cached locally using shared preferences
-- Offline banner shows when network unavailable
-- Cached messages displayed when API fails
-- Automatic sync when network restored
+### Other
 
-### Push Notifications
+- Bookmarks: local storage, toggle from detail screen
+- Share: native share sheet from list and detail
+- Offline: cached messages shown when network unavailable
+- Search: full-text search via server
 
-- FCM integration for push notifications
-- Badge count management (iOS and Android)
-- Automatic badge refresh after marking messages as read
-- Background notification handling
+## Common Mistakes Claude Makes
 
-### Bookmarks
+### Import Management
 
-- Local bookmark storage
-- Toggle bookmark from message detail screen
-- Snackbar confirmation on bookmark add/remove
+- **`friendlyMessage` extension** is defined in `dio_client.dart`. Any file using
+  `error.friendlyMessage` on a `DioException` MUST import `dio_client.dart`.
+  Forgetting this is a compile error.
+- When refactoring provider locations, check ALL files that import the old location.
+- `messages_provider.dart` is the shared source — import from there, not from `messages_screen.dart`.
 
-### Share Functionality
+### State Management (Riverpod)
 
-- Native share sheet integration
-- Share message title and content
-- Platform-specific positioning (iPad support)
+- Use `ref.read(provider.notifier).methodName()` to call methods on `StateNotifier` —
+  do NOT use `ref.invalidate(provider)` for `StateNotifierProvider` as it disposes the
+  notifier and has timing/reliability issues.
+- `unreadCountProvider` is a synchronous `Provider<int>` that derives from `messagesProvider` —
+  it updates automatically whenever `messagesProvider` state changes.
+- Use `ref.read()` for one-time actions, `ref.watch()` for reactive rebuilds.
+- `Future.microtask()` for side effects triggered in `build()` method.
 
-## Recent Changes (2026-01-30)
+### iOS-Specific
 
-### Mark-as-Read Implementation
+- Do NOT add `FirebaseApp.configure()` to `AppDelegate.swift` — FlutterFire handles
+  initialization via Dart's `Firebase.initializeApp()` in `main.dart`. Adding it causes
+  SIGABRT crash on iOS startup.
+- `flutter_local_notifications` conflicts with Firebase Messaging's `UNUserNotificationCenter`
+  delegate on iOS. Local notifications are Android-only; iOS badge uses `AppBadgePlus` only.
+- iOS builds only via Codemagic — no local Mac build available.
 
-**Backend Changes** (`C:/projects/nuclear-motd/app/api/mobile_api.py`):
+### Build Debugging
 
-- Added `POST /api/mobile/messages/{message_id}/mark-read` endpoint
-- Updates `UserMessageHistory.read_in_app = True` and sets `read_at` timestamp
-- Modified `/api/mobile/messages` to include `read_in_app` field in response
+- `flutter analyze` on Windows shows false-positive `uri_does_not_exist` errors for
+  `dio_client.dart` imports — these are pre-existing and don't block Codemagic builds.
+- Local `flutter build apk` often fails with OneDrive file-locking errors — not a code issue.
+- "kernel_snapshot_program failed: Exception" = Dart compile error. Run
+  `flutter build apk --debug 2>&1 | grep "lib\|Error"` to see the actual error line.
 
-**Mobile App Changes**:
+### Android-Specific
 
-- Converted `MessageDetailScreen` from `ConsumerWidget` to `ConsumerStatefulWidget`
-- Added `_hasMarkedAsRead` flag to prevent duplicate mark-as-read calls
-- Mark-as-read triggers when message data loads: `if (!_hasMarkedAsRead && messageAsync.hasValue)`
-- After marking read:
-  - Refreshes badge count: `ref.read(notificationServiceProvider).refreshBadge()`
-  - Invalidates messages list: `ref.invalidate(messagesProvider)`
-- Messages list now shows "read/unread" status instead of "active/inactive"
-
-**Files Modified**:
-
-- `C:/projects/nuclear-motd/app/api/mobile_api.py` - Backend API
-- `C:/projects/nuclear-motd-mobile/lib/features/messages/presentation/screens/message_detail_screen.dart`
-- `C:/projects/nuclear-motd-mobile/lib/features/messages/presentation/screens/messages_screen.dart`
-
-## Read / Badge Sync Fix (2026-02-04)
-
-### Problem
-Mobile badge count and message list were inconsistent with web:
-- Same message delivered on multiple dates created duplicate history records
-- Badge counted raw records; web bell counted distinct message_ids
-- Mobile messages list showed duplicates; reading one didn't clear all copies
-- Search endpoint had a `NameError` crash (`read_in_app` undefined)
-
-### Root Cause
-Backend `/unread-count` (both web and mobile) counted raw `UserMessageHistory` rows
-where `read_in_app = false`. The web bell dropdown deduplicated by `message_id` and
-showed a different number. Mobile messages list showed every history record as a
-separate card.
-
-### Solution (3 layers)
-
-**Backend (`mobile_api.py`, `user_dashboard_modern.py`)**:
-- Both `/unread-count` endpoints now count `DISTINCT message_id` where `read_in_app = false`
-- This matches the web bell-dropdown logic exactly
-- Fixed search endpoint: pre-fetches read status per message_id from history
-
-**Mobile messages list (`messages_screen.dart`)**:
-- `MessagesNotifier.loadMessages()` deduplicates the API response by `message_id`
-- Keeps the entry with the most recent `sent_at`
-- If ANY copy of a message is unread, the deduplicated entry shows as unread
-- Badge count (distinct unread messages) now matches list item count
-
-**Mobile home screen (`home_screen.dart`)**:
-- `recentMessagesProvider` fetches `limit=10` and deduplicates to top 3 distinct
-- Each recent message card now shows a read/unread badge (matches messages list)
-
-### How It Works End-to-End
-1. User opens a message in mobile app → `mark-read` marks ALL history records for that `message_id`
-2. Badge refreshes via `/unread-count` → returns count of distinct `message_id`s still unread
-3. Messages list refreshes → deduplicates, flips the single entry to "read"
-4. Web bell dropdown → same deduplicated count from `/notification-list`
-5. Result: badge and list are consistent across mobile and web
-
-### Additional Fix (2026-02-04 session 2)
-- `/messages` endpoint in `mobile_api.py` now also deduplicates server-side
-  (over-fetches 3x raw records, collapses by message_id, keeps most-recent sent_at)
-- Client-side dedup in `messages_screen.dart` remains as belt-and-suspenders
-- Cleaned up 7 partially-read messages on production (msg_ids 96,131,236,240,253,267,271)
-  that were left over from before the "mark ALL records" fix was deployed
-- Production restart via `sudo systemctl restart nuclear-motd.service`
-  (note: `pkill` fails as nuclear-motd user — always use systemctl)
-- Verified: web and mobile `/unread-count` return identical counts; `/messages` has zero duplicates
-
-### Files Modified
-- `C:/projects/nuclear-motd/app/api/mobile_api.py` — unread-count dedup + search fix + /messages dedup
-- `C:/projects/nuclear-motd/app/api/user_dashboard_modern.py` — web unread-count dedup
-- `lib/features/messages/presentation/screens/messages_screen.dart` — list dedup
-- `lib/features/home/presentation/screens/home_screen.dart` — home dedup + read badge
+- Always force-stop after installing new APK: `adb shell am force-stop com.nuclearmotd.app`
+- AdMob native ads require factory registration in native Android code (`MainActivity.kt`)
 
 ## Debugging Common Issues
 
-### App Not Updating After Rebuild
+### Messages List Not Updating After Reading
 
-**Symptom**: Changes don't appear, debug logs don't show up, old code still running
+**Symptom**: Message still shows "unread" after returning to list
 
-**Root Cause**: Old app process persists despite installing new APK
+**Current solution**: `markLocallyAsRead(id)` in `MessagesNotifier` updates local state
+instantly. If this isn't working, check that `message_detail_screen.dart` is calling
+`ref.read(messagesProvider.notifier).markLocallyAsRead(widget.messageId)` after
+the mark-read API call.
 
-**Solution**:
+**Do NOT use**: `ref.invalidate(messagesProvider)` — this disposes the notifier and
+has timing/reliability issues causing silent fallback to stale cache.
 
-1. Force-stop the app: `"$LOCALAPPDATA/Android/Sdk/platform-tools/adb.exe" shell am force-stop com.nuclearmotd.app`
-2. Manually launch app on device
-3. Check flutter logs for new debug messages
+### Bell Count Not Updating
 
-### Badge Count Not Updating
+**How it works**: `unreadCountProvider` is a `Provider<int>` that watches `messagesProvider`.
+It updates automatically — no API call needed. If it's wrong, `messagesProvider` has stale data.
 
-**Symptom**: Badge shows incorrect count after reading messages
+### App Icon Badge Not Showing (iOS)
 
-**Root Cause**: Badge service not refreshed after mark-as-read
+`AppBadgePlus.updateBadge(count)` is called after mark-read. Badge requires notification
+permission. On iOS 16+, `UNUserNotificationCenter.setBadgeCount()` is used internally.
+Still under investigation if number appears on home screen icon.
 
-**Solution**: Ensure `ref.read(notificationServiceProvider).refreshBadge()` is called after marking message as read
+### API Calls Failing (401)
 
-### Messages List Not Refreshing
-
-**Symptom**: Messages still show "unread" after viewing
-
-**Root Cause**: Provider state not invalidated
-
-**Solution**: Call `ref.invalidate(messagesProvider)` after marking message as read
-
-### API Calls Failing
-
-**Symptom**: 401 unauthorized errors
-
-**Root Cause**: JWT token expired or missing
-
-**Solution**: Check token storage and refresh logic in `dio_client.dart`
+Silent re-login is implemented in `AuthInterceptor` — it reads saved credentials from
+`FlutterSecureStorage` and retries. If re-login fails, token is cleared and router
+redirects to login screen.
 
 ## Development Workflow
 
-### Before Starting Any Task
+### iOS Release (Codemagic)
 
-1. Pull latest: `git pull origin master`
-2. Check Flutter version: `flutter doctor`
-3. Verify device connected: `flutter devices`
-4. Review related code sections in this file
+1. Make changes, test locally if possible
+2. Bump `version` in `pubspec.yaml` (e.g. `0.9.6+27` → `0.9.6+28`)
+3. `git add`, `git commit`, `git push origin master`
+4. Trigger Codemagic build manually
+5. Codemagic distributes to TestFlight automatically on success
 
-### Standard Task Flow
+### Android Testing
 
-1. **Research Phase**: Understand requirements, review existing code
-2. **Plan Phase**: Outline approach before coding
-3. **Implement Phase**: Make changes with auto-accept edits
-4. **Test Phase**: Build and install APK, test on device
-5. **Verify Phase**: Check flutter logs for expected behavior
-6. **Commit Phase**: Use descriptive commit messages
+1. `flutter build apk --release` (may fail due to OneDrive — retry or use Codemagic)
+2. `adb install -r build/app/outputs/flutter-apk/app-release.apk`
+3. `adb shell am force-stop com.nuclearmotd.app`
+4. Launch manually on device
+5. `flutter logs` to monitor
 
-### Testing Checklist
+## Current Build Status (2026-02-21)
 
-- [ ] Build succeeds: `flutter build apk --release`
-- [ ] App force-stopped: `adb shell am force-stop com.nuclearmotd.app`
-- [ ] APK installed: `adb install -r build/app/outputs/flutter-apk/app-release.apk`
-- [ ] Flutter logs running: `flutter logs`
-- [ ] App launched manually on device
-- [ ] Expected debug messages appear in logs
-- [ ] UI changes visible and working
-- [ ] No errors in flutter logs
+**Build 0.9.6+27** — confirmed working on iOS via Codemagic/TestFlight
 
-## Production Configuration
-
-**Environment Variables** (configured in backend):
-
-- `BASE_URL` - API base URL (https://nuclear-motd.com)
-- `ENV` - Environment mode (production)
-
-**App Configuration** (`lib/core/config/app_config.dart`):
-
-- API endpoints
-- AdMob unit IDs (Android and iOS)
-- App version and build number
-
-## Notes for Claude Code Sessions
-
-**This file is checked into git and shared across the team. Update it whenever:**
-
-- Claude makes a mistake (add to "Common Mistakes" section)
-- You establish a new coding pattern or standard
-- You discover a helpful debugging technique
-- You add new features or modify existing ones
-
-**Remember:**
-
-- Always force-stop app after installing new APK
-- Check flutter logs to verify new code is running
-- Use `Future.microtask()` for side effects in build method
-- Dispose resources in `dispose()` method
-- Use `const` constructors for performance
-- Handle `DioException` errors properly
+- iOS boots, authenticates, loads all messages
+- Mark-as-read works: instant visual feedback via optimistic local update
+- Bell count updates instantly when messages are read
+- Unread filter works in messages list
+- App icon badge (iOS home screen number): **under investigation**
+- Backend `/messages` endpoint changes (all messages, unread-first):
+  **needs server deploy** — user must SSH in and run
+  `sudo bash /home/nuclear-motd/restart_server.sh`
