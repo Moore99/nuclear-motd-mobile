@@ -51,8 +51,8 @@ void main() async {
     debugPrint('📱 Initializing bookmarks...');
     await BookmarksService.initialize();
 
-    // Initialize Mobile Ads SDK (only on mobile platforms)
-    if (_isMobilePlatform) {
+    // Initialize Mobile Ads SDK (Android only for now - iOS pending AdMob review)
+    if (_isMobilePlatform && !Platform.isIOS) {
       debugPrint('📱 Initializing Mobile Ads...');
       try {
         await MobileAds.instance.initialize();
