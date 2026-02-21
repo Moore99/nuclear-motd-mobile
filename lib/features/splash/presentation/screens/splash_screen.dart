@@ -60,41 +60,51 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
   }
 
   Future<void> _checkAuthAndNavigate() async {
-    // Wait for animation
-    await Future.delayed(const Duration(seconds: 2));
+    try {
+      // Wait for animation
+      await Future.delayed(const Duration(seconds: 2));
 
-    if (!mounted) return;
+      if (!mounted) return;
 
-    // Check if onboarding is complete
-    final onboardingComplete = await ref.read(onboardingCompleteProvider.future);
-    
-    if (!onboardingComplete) {
-      // Show onboarding for first-time users
-      if (mounted) context.go(AppRoutes.onboarding);
-      return;
-    }
-
-    // Check for stored auth token (SecureStorage + SharedPreferences fallback)
-    final token = await readAuthToken(ref);
-
-    if (token != null) {
-      // Set token in provider
-      ref.read(authTokenProvider.notifier).state = token;
-      
-      // Initialize push notifications after auth
-      if (_isMobilePlatform) {
-        try {
-          final pushService = ref.read(pushNotificationServiceProvider);
-          await pushService.initialize();
-        } catch (e) {
-          debugPrint('📱 Push notification init error: $e');
-        }
+      // Check if onboarding is complete
+      bool onboardingComplete = false;
+      try {
+        onboardingComplete = await ref.read(onboardingCompleteProvider.future);
+      } catch (e) {
+        debugPrint('📱 Onboarding check error: $e');
       }
-      
-      // Navigate to home
-      if (mounted) context.go(AppRoutes.home);
-    } else {
-      // Navigate to login
+
+      if (!onboardingComplete) {
+        if (mounted) context.go(AppRoutes.onboarding);
+        return;
+      }
+
+      // Check for stored auth token
+      String? token;
+      try {
+        token = await readAuthToken(ref);
+      } catch (e) {
+        debugPrint('📱 Auth token read error: $e');
+      }
+
+      if (token != null) {
+        ref.read(authTokenProvider.notifier).state = token;
+
+        if (_isMobilePlatform) {
+          try {
+            final pushService = ref.read(pushNotificationServiceProvider);
+            await pushService.initialize();
+          } catch (e) {
+            debugPrint('📱 Push notification init error: $e');
+          }
+        }
+
+        if (mounted) context.go(AppRoutes.home);
+      } else {
+        if (mounted) context.go(AppRoutes.login);
+      }
+    } catch (e, stack) {
+      debugPrint('📱 Splash navigation error: $e\n$stack');
       if (mounted) context.go(AppRoutes.login);
     }
   }
