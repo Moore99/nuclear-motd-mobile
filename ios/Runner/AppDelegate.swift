@@ -1,7 +1,7 @@
 import Flutter
 import UIKit
-import FirebaseCore
 import FirebaseMessaging
+import UserNotifications
 
 @main
 @objc class AppDelegate: FlutterAppDelegate {
@@ -9,9 +9,9 @@ import FirebaseMessaging
     _ application: UIApplication,
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
   ) -> Bool {
-    // Configure Firebase
-    FirebaseApp.configure()
-    
+    // FirebaseApp.configure() is intentionally NOT called here.
+    // FlutterFire handles Firebase initialization via Firebase.initializeApp() in Dart.
+
     // Register for remote notifications
     if #available(iOS 10.0, *) {
       UNUserNotificationCenter.current().delegate = self
@@ -20,18 +20,14 @@ import FirebaseMessaging
         options: authOptions,
         completionHandler: { _, _ in }
       )
-    } else {
-      let settings: UIUserNotificationSettings =
-        UIUserNotificationSettings(types: [.alert, .badge, .sound], categories: nil)
-      application.registerUserNotificationSettings(settings)
     }
     application.registerForRemoteNotifications()
-    
+
     GeneratedPluginRegistrant.register(with: self)
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }
-  
-  // Handle APNs token registration
+
+  // Handle APNs token - pass to Firebase Messaging
   override func application(_ application: UIApplication,
                             didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
     Messaging.messaging().apnsToken = deviceToken
