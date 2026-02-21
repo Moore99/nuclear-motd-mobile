@@ -11,6 +11,7 @@ import '../../../../core/services/bookmarks_service.dart';
 import '../../../../core/services/share_service.dart';
 import '../../../../core/services/notification_service.dart';
 import '../../../shared/widgets/sponsor_banner.dart';
+import '../../../shared/widgets/bell_icon.dart';
 import 'messages_screen.dart';
 
 /// Message detail provider
@@ -92,6 +93,7 @@ class _MessageDetailScreenState extends ConsumerState<MessageDetailScreen> {
       debugPrint('📱 Message ${widget.messageId} marked as read, refreshing badge and messages list...');
       ref.read(notificationServiceProvider).refreshBadge();
       ref.invalidate(messagesProvider);
+      ref.invalidate(unreadCountProvider);
     } catch (e) {
       debugPrint('Failed to mark message as read: $e');
     }

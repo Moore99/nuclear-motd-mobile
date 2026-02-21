@@ -16,6 +16,7 @@ import '../../../../core/router/app_router.dart';
 import '../../../../core/services/share_service.dart';
 import '../../../shared/widgets/overflow_menu.dart';
 import '../../../shared/widgets/offline_banner.dart';
+import '../../../shared/widgets/bell_icon.dart';
 
 /// Check if we're on a mobile platform that supports ads
 bool get _isMobilePlatform {
@@ -121,20 +122,16 @@ class _MessagesScreenState extends ConsumerState<MessagesScreen> {
           ],
         ),
         actions: [
-            IconButton(
-              icon: Icon(_showUnreadOnly ? Icons.message : Icons.message_outlined),
-              onPressed: () {
-                setState(() {
-                  _showUnreadOnly = !_showUnreadOnly;
-                });
-              },
-              tooltip: _showUnreadOnly ? 'Show all messages' : 'Show unread only',
-            ),
-            IconButton(
-              icon: const Icon(Icons.search),
-              onPressed: () => context.push(AppRoutes.search),
-              tooltip: 'Search',
-            ),
+          IconButton(
+            icon: Icon(_showUnreadOnly ? Icons.mark_email_unread : Icons.mark_email_unread_outlined),
+            onPressed: () => setState(() => _showUnreadOnly = !_showUnreadOnly),
+            tooltip: _showUnreadOnly ? 'Show all messages' : 'Show unread only',
+          ),
+          IconButton(
+            icon: const Icon(Icons.search),
+            onPressed: () => context.push(AppRoutes.search),
+            tooltip: 'Search',
+          ),
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: () => ref.read(messagesProvider.notifier).loadMessages(),

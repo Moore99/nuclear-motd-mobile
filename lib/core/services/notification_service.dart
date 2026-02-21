@@ -38,8 +38,8 @@ class NotificationService {
         return;
       }
 
-      // Initialize local notifications for Samsung badge support
-      if (Platform.isAndroid) {
+      // Initialize local notifications (Android: Samsung badge; iOS: badge via silent notification)
+      if (Platform.isAndroid || Platform.isIOS) {
         await _initializeLocalNotifications();
       }
 
@@ -64,12 +64,17 @@ class NotificationService {
     }
   }
 
-  /// Initialize local notifications (required for Samsung badge support)
+  /// Initialize local notifications (Android: Samsung badge; iOS: badge via silent notification)
   Future<void> _initializeLocalNotifications() async {
     try {
       debugPrint('📱 Initializing local notifications...');
       const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
-      const initSettings = InitializationSettings(android: androidSettings);
+      const iOSSettings = DarwinInitializationSettings(
+        requestAlertPermission: false,
+        requestBadgePermission: false,
+        requestSoundPermission: false,
+      );
+      const initSettings = InitializationSettings(android: androidSettings, iOS: iOSSettings);
 
       await _localNotifications.initialize(settings: initSettings);
       debugPrint('📱 Local notifications initialized');
@@ -172,23 +177,18 @@ class NotificationService {
 
       // Update app icon badge
       if (unreadCount > 0) {
-        // Try to update badge count (works on most devices)
         await AppBadgePlus.updateBadge(unreadCount);
-
-        // For Samsung devices, also post a silent notification with badge number
-        if (Platform.isAndroid) {
+        // Silent notification sets badge reliably on Samsung (Android) and iOS
+        if (Platform.isAndroid || Platform.isIOS) {
           await _postSilentNotification(unreadCount);
         }
-
         debugPrint('📱 Badge updated to: $unreadCount');
       } else {
         await AppBadgePlus.updateBadge(0);
-
-        // Cancel all notifications to clear badge on Samsung
-        if (Platform.isAndroid) {
+        // Cancel silent notification to clear badge
+        if (Platform.isAndroid || Platform.isIOS) {
           await _localNotifications.cancelAll();
         }
-
         debugPrint('📱 Badge removed (count is 0)');
       }
     } catch (e) {
@@ -199,32 +199,46 @@ class NotificationService {
     }
   }
 
-  /// Post a silent notification with badge count (for Samsung devices)
+  /// Post a silent notification to reliably update the badge count.
+  /// Android: persistent silent notification (required for Samsung).
+  /// iOS: badge-only notification with no visible alert.
   Future<void> _postSilentNotification(int count) async {
     try {
       debugPrint('📱 Posting silent notification with count: $count');
-      final androidDetails = AndroidNotificationDetails(
-        _badgeChannelId,
-        _badgeChannelName,
-        channelDescription: 'Silent notifications for app badge',
-        importance: Importance.min, // Use minimum importance instead of low
-        priority: Priority.min,
-        showWhen: false,
-        playSound: false,
-        enableVibration: false,
-        onlyAlertOnce: true,
-        ongoing: true, // Make it persistent so it stays
-        autoCancel: false, // Don't auto-cancel
-        number: count, // This sets the badge number on Samsung
-      );
 
-      final notificationDetails = NotificationDetails(android: androidDetails);
+      NotificationDetails notificationDetails;
 
-      // Always use ID 0 so we only have one silent notification
+      if (Platform.isAndroid) {
+        final androidDetails = AndroidNotificationDetails(
+          _badgeChannelId,
+          _badgeChannelName,
+          channelDescription: 'Silent notifications for app badge',
+          importance: Importance.min,
+          priority: Priority.min,
+          showWhen: false,
+          playSound: false,
+          enableVibration: false,
+          onlyAlertOnce: true,
+          ongoing: true,
+          autoCancel: false,
+          number: count,
+        );
+        notificationDetails = NotificationDetails(android: androidDetails);
+      } else {
+        // iOS: badge-only, no alert or sound shown to user
+        final iOSDetails = DarwinNotificationDetails(
+          badgeNumber: count,
+          presentAlert: false,
+          presentSound: false,
+          presentBadge: true,
+        );
+        notificationDetails = NotificationDetails(iOS: iOSDetails);
+      }
+
       await _localNotifications.show(
         id: 0,
-        title: 'Nuclear MOTD', // Non-empty title required for badge on Samsung
-        body: '$count unread message${count != 1 ? 's' : ''}', // Non-empty body
+        title: Platform.isIOS ? null : 'Nuclear MOTD',
+        body: Platform.isIOS ? null : '$count unread message${count != 1 ? 's' : ''}',
         notificationDetails: notificationDetails,
       );
 

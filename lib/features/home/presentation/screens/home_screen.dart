@@ -16,6 +16,7 @@ import '../../../../core/cache/message_cache_service.dart';
 import '../../../shared/widgets/sponsor_banner.dart';
 import '../../../shared/widgets/overflow_menu.dart';
 import '../../../shared/widgets/offline_banner.dart';
+import '../../../shared/widgets/bell_icon.dart';
 
 /// Check if we're on a mobile platform that supports ads
 bool get _isMobilePlatform {
@@ -163,6 +164,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
           ],
         ),
         actions: [
+          const BellIcon(),
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: () => ref.refresh(dashboardProvider),
