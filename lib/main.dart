@@ -117,13 +117,9 @@ class _NuclearMotdAppState extends ConsumerState<NuclearMotdApp> {
     super.initState();
     // Initialize notification service on app start
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      try {
-        final notificationService = ref.read(notificationServiceProvider);
-        notificationService.initialize();
-        debugPrint('📱 Notification service initialized');
-      } catch (e) {
+      ref.read(notificationServiceProvider).initialize().catchError((e) {
         debugPrint('📱 Failed to initialize notification service: $e');
-      }
+      });
     });
   }
 

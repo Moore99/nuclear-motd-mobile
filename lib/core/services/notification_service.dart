@@ -30,26 +30,38 @@ class NotificationService {
 
   /// Initialize notification service
   Future<void> initialize() async {
-    final prefs = await SharedPreferences.getInstance();
-    final notificationsEnabled = prefs.getBool('notifications_enabled') ?? true;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final notificationsEnabled = prefs.getBool('notifications_enabled') ?? true;
 
-    if (!notificationsEnabled) {
-      return;
+      if (!notificationsEnabled) {
+        return;
+      }
+
+      // Initialize local notifications for Samsung badge support
+      if (Platform.isAndroid) {
+        await _initializeLocalNotifications();
+      }
+
+      // Request notification permissions
+      try {
+        await _requestPermissions();
+      } catch (e) {
+        debugPrint('📱 Notification permission error (non-fatal): $e');
+      }
+
+      // Initialize Firebase messaging
+      try {
+        await _initializeMessaging();
+      } catch (e) {
+        debugPrint('📱 Firebase messaging init error (non-fatal): $e');
+      }
+
+      // Start periodic sync for unread count
+      _startPeriodicSync();
+    } catch (e) {
+      debugPrint('📱 Notification service init error (non-fatal): $e');
     }
-
-    // Initialize local notifications for Samsung badge support
-    if (Platform.isAndroid) {
-      await _initializeLocalNotifications();
-    }
-
-    // Request notification permissions
-    await _requestPermissions();
-
-    // Initialize Firebase messaging
-    await _initializeMessaging();
-
-    // Start periodic sync for unread count
-    _startPeriodicSync();
   }
 
   /// Initialize local notifications (required for Samsung badge support)
