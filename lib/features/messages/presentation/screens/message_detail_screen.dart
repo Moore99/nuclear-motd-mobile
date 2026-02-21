@@ -90,6 +90,8 @@ class _MessageDetailScreenState extends ConsumerState<MessageDetailScreen> {
       final dio = ref.read(dioProvider);
       await dio.post('${AppConfig.messages}/${widget.messageId}/mark-read');
       debugPrint('📱 Message ${widget.messageId} marked as read, refreshing badge and messages list...');
+      // Instantly update local state so the list shows "read" without waiting
+      ref.read(messagesProvider.notifier).markLocallyAsRead(widget.messageId);
       ref.read(notificationServiceProvider).refreshBadge();
       ref.read(messagesProvider.notifier).loadMessages();
     } catch (e) {

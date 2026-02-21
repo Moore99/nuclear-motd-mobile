@@ -30,6 +30,22 @@ class MessagesNotifier extends StateNotifier<AsyncValue<List>> {
       }
     }
   }
+
+  /// Instantly marks a single message as read in local state without a
+  /// network round-trip. Call this immediately after a successful mark-read
+  /// API call so the UI reflects the change before the server reload completes.
+  void markLocallyAsRead(int messageId) {
+    final current = state.valueOrNull;
+    if (current == null) return;
+    final updated = current.map((m) {
+      final msg = m as Map<String, dynamic>;
+      if (msg['id'] == messageId) {
+        return <String, dynamic>{...msg, 'read_in_app': true};
+      }
+      return msg;
+    }).toList();
+    state = AsyncValue.data(updated);
+  }
 }
 
 final messagesProvider =
