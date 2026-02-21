@@ -23,65 +23,24 @@ bool get _isMobilePlatform {
   return Platform.isAndroid || Platform.isIOS;
 }
 
-/// Messages state notifier with pagination
+/// Messages state notifier - fetches all messages, client-side filtering
 class MessagesNotifier extends StateNotifier<AsyncValue<List>> {
   final Ref ref;
-  int _currentLimit = 20;
-  bool _hasMore = true;
 
   MessagesNotifier(this.ref) : super(const AsyncValue.loading()) {
     loadMessages();
   }
 
-  Future<void> loadMessages({bool loadMore = false}) async {
-    if (loadMore && !_hasMore) return;
-
-    if (!loadMore) {
-      state = const AsyncValue.loading();
-      _currentLimit = 20;
-    }
-
+  Future<void> loadMessages() async {
+    state = const AsyncValue.loading();
     try {
       final dio = ref.read(dioProvider);
-      final response = await dio.get(
-        AppConfig.messages,
-        queryParameters: {'limit': _currentLimit},
-      );
-      final rawMessages = response.data as List;
-
-      // Deduplicate by message_id: keep only the most-recent sent_at entry.
-      // Same message can be delivered on multiple dates; the badge counts
-      // distinct unread message_ids, so the list must match.
-      final Map<int, Map<String, dynamic>> deduped = {};
-      for (final msg in rawMessages) {
-        final id = msg['id'] as int;
-        final existing = deduped[id];
-        if (existing == null) {
-          deduped[id] = msg;
-        } else {
-          // Keep the one with the later sent_at
-          final existingSentAt = existing['sent_at'] as String? ?? '';
-          final newSentAt = msg['sent_at'] as String? ?? '';
-          if (newSentAt.compareTo(existingSentAt) > 0) {
-            deduped[id] = msg;
-          }
-          // If either copy is unread, the message counts as unread
-          if (existing['read_in_app'] == false || msg['read_in_app'] == false) {
-            deduped[id]!['read_in_app'] = false;
-          }
-        }
-      }
-      final messages = deduped.values.toList();
-
-      // Cache the messages
+      // Server returns all messages, deduplicated and sorted: unread first, then by date.
+      final response = await dio.get(AppConfig.messages);
+      final messages = response.data as List;
       await MessageCacheService.cacheMessages(messages);
-
-      // Check if we got fewer raw messages than requested (means no more)
-      _hasMore = rawMessages.length >= _currentLimit;
-
       state = AsyncValue.data(messages);
     } catch (e, stack) {
-      // Try to return cached data
       final cached = MessageCacheService.getCachedMessages();
       if (cached.isNotEmpty) {
         state = AsyncValue.data(cached);
@@ -90,13 +49,6 @@ class MessagesNotifier extends StateNotifier<AsyncValue<List>> {
       }
     }
   }
-
-  void loadMore() {
-    _currentLimit += 20;
-    loadMessages(loadMore: true);
-  }
-
-  bool get hasMore => _hasMore;
 }
 
 final messagesProvider =
@@ -243,33 +195,8 @@ class _MessagesScreenState extends ConsumerState<MessagesScreen> {
       },
       child: ListView.builder(
         padding: const EdgeInsets.symmetric(vertical: 8),
-        itemCount: itemsWithAds.length + 1, // +1 for load more button
+        itemCount: itemsWithAds.length,
         itemBuilder: (context, index) {
-          // Load more button at the end
-          if (index == itemsWithAds.length) {
-            final notifier = ref.read(messagesProvider.notifier);
-            if (!notifier.hasMore) {
-              return Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Text(
-                  'For complete message history, visit the web application',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    color: Colors.grey.shade600,
-                    fontSize: 12,
-                    fontStyle: FontStyle.italic,
-                  ),
-                ),
-              );
-            }
-            return Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: ElevatedButton(
-                onPressed: () => notifier.loadMore(),
-                child: const Text('Load More Messages'),
-              ),
-            );
-          }
 
           final item = itemsWithAds[index];
 
