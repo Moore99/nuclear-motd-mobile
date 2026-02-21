@@ -91,7 +91,7 @@ class _MessageDetailScreenState extends ConsumerState<MessageDetailScreen> {
       await dio.post('${AppConfig.messages}/${widget.messageId}/mark-read');
       debugPrint('📱 Message ${widget.messageId} marked as read, refreshing badge and messages list...');
       ref.read(notificationServiceProvider).refreshBadge();
-      ref.invalidate(messagesProvider);
+      ref.read(messagesProvider.notifier).loadMessages();
     } catch (e) {
       debugPrint('Failed to mark message as read: $e');
     }
