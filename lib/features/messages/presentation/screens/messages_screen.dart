@@ -7,16 +7,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 
-import '../../../../core/config/app_config.dart';
-import '../../../../core/network/dio_client.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/atom_logo.dart';
-import '../../../../core/cache/message_cache_service.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/services/share_service.dart';
 import '../../../shared/widgets/overflow_menu.dart';
 import '../../../shared/widgets/offline_banner.dart';
 import '../../../shared/widgets/bell_icon.dart';
+import '../../messages_provider.dart';
 
 /// Check if we're on a mobile platform that supports ads
 bool get _isMobilePlatform {
@@ -24,38 +22,6 @@ bool get _isMobilePlatform {
   return Platform.isAndroid || Platform.isIOS;
 }
 
-/// Messages state notifier - fetches all messages, client-side filtering
-class MessagesNotifier extends StateNotifier<AsyncValue<List>> {
-  final Ref ref;
-
-  MessagesNotifier(this.ref) : super(const AsyncValue.loading()) {
-    loadMessages();
-  }
-
-  Future<void> loadMessages() async {
-    state = const AsyncValue.loading();
-    try {
-      final dio = ref.read(dioProvider);
-      // Server returns all messages, deduplicated and sorted: unread first, then by date.
-      final response = await dio.get(AppConfig.messages);
-      final messages = response.data as List;
-      await MessageCacheService.cacheMessages(messages);
-      state = AsyncValue.data(messages);
-    } catch (e, stack) {
-      final cached = MessageCacheService.getCachedMessages();
-      if (cached.isNotEmpty) {
-        state = AsyncValue.data(cached);
-      } else {
-        state = AsyncValue.error(e, stack);
-      }
-    }
-  }
-}
-
-final messagesProvider =
-    StateNotifierProvider<MessagesNotifier, AsyncValue<List>>((ref) {
-  return MessagesNotifier(ref);
-});
 
 class MessagesScreen extends ConsumerStatefulWidget {
   const MessagesScreen({super.key});

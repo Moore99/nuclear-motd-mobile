@@ -2,22 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../core/config/app_config.dart';
-import '../../../core/network/dio_client.dart';
 import '../../../core/router/app_router.dart';
+import '../../messages/messages_provider.dart';
 
-/// Unread message count — auto-refreshes on login/logout, can be manually
-/// invalidated (e.g. after marking a message as read).
-final unreadCountProvider = FutureProvider<int>((ref) async {
-  final token = ref.watch(authTokenProvider);
-  if (token == null) return 0;
-  try {
-    final dio = ref.read(dioProvider);
-    final response = await dio.get(AppConfig.unreadCount);
-    return (response.data['unread_count'] as num?)?.toInt() ?? 0;
-  } catch (_) {
-    return 0;
-  }
+/// Unread count derived directly from the local messages list —
+/// no extra API call, updates instantly when a message is marked as read.
+final unreadCountProvider = Provider<int>((ref) {
+  final messages = ref.watch(messagesProvider).valueOrNull ?? [];
+  return messages.where((m) => m['read_in_app'] == false).length;
 });
 
 /// Bell icon for the AppBar showing the live unread message count.
@@ -27,7 +19,7 @@ class BellIcon extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final count = ref.watch(unreadCountProvider).valueOrNull ?? 0;
+    final count = ref.watch(unreadCountProvider);
 
     return IconButton(
       tooltip: count > 0 ? '$count unread' : 'Messages',

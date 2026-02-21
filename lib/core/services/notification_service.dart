@@ -38,8 +38,8 @@ class NotificationService {
         return;
       }
 
-      // Initialize local notifications (Android: Samsung badge; iOS: badge via silent notification)
-      if (Platform.isAndroid || Platform.isIOS) {
+      // Initialize local notifications for Android (Samsung badge support)
+      if (Platform.isAndroid) {
         await _initializeLocalNotifications();
       }
 
@@ -64,17 +64,12 @@ class NotificationService {
     }
   }
 
-  /// Initialize local notifications (Android: Samsung badge; iOS: badge via silent notification)
+  /// Initialize local notifications for Android (Samsung badge support)
   Future<void> _initializeLocalNotifications() async {
     try {
       debugPrint('📱 Initializing local notifications...');
       const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
-      const iOSSettings = DarwinInitializationSettings(
-        requestAlertPermission: false,
-        requestBadgePermission: false,
-        requestSoundPermission: false,
-      );
-      const initSettings = InitializationSettings(android: androidSettings, iOS: iOSSettings);
+      const initSettings = InitializationSettings(android: androidSettings);
 
       await _localNotifications.initialize(settings: initSettings);
       debugPrint('📱 Local notifications initialized');
@@ -178,15 +173,14 @@ class NotificationService {
       // Update app icon badge
       if (unreadCount > 0) {
         await AppBadgePlus.updateBadge(unreadCount);
-        // Silent notification sets badge reliably on Samsung (Android) and iOS
-        if (Platform.isAndroid || Platform.isIOS) {
+        // Samsung devices also need a silent notification to show the badge
+        if (Platform.isAndroid) {
           await _postSilentNotification(unreadCount);
         }
         debugPrint('📱 Badge updated to: $unreadCount');
       } else {
         await AppBadgePlus.updateBadge(0);
-        // Cancel silent notification to clear badge
-        if (Platform.isAndroid || Platform.isIOS) {
+        if (Platform.isAndroid) {
           await _localNotifications.cancelAll();
         }
         debugPrint('📱 Badge removed (count is 0)');
@@ -199,49 +193,31 @@ class NotificationService {
     }
   }
 
-  /// Post a silent notification to reliably update the badge count.
-  /// Android: persistent silent notification (required for Samsung).
-  /// iOS: badge-only notification with no visible alert.
+  /// Post a silent persistent notification for Samsung badge support (Android only).
   Future<void> _postSilentNotification(int count) async {
     try {
       debugPrint('📱 Posting silent notification with count: $count');
-
-      NotificationDetails notificationDetails;
-
-      if (Platform.isAndroid) {
-        final androidDetails = AndroidNotificationDetails(
-          _badgeChannelId,
-          _badgeChannelName,
-          channelDescription: 'Silent notifications for app badge',
-          importance: Importance.min,
-          priority: Priority.min,
-          showWhen: false,
-          playSound: false,
-          enableVibration: false,
-          onlyAlertOnce: true,
-          ongoing: true,
-          autoCancel: false,
-          number: count,
-        );
-        notificationDetails = NotificationDetails(android: androidDetails);
-      } else {
-        // iOS: badge-only, no alert or sound shown to user
-        final iOSDetails = DarwinNotificationDetails(
-          badgeNumber: count,
-          presentAlert: false,
-          presentSound: false,
-          presentBadge: true,
-        );
-        notificationDetails = NotificationDetails(iOS: iOSDetails);
-      }
-
+      final androidDetails = AndroidNotificationDetails(
+        _badgeChannelId,
+        _badgeChannelName,
+        channelDescription: 'Silent notifications for app badge',
+        importance: Importance.min,
+        priority: Priority.min,
+        showWhen: false,
+        playSound: false,
+        enableVibration: false,
+        onlyAlertOnce: true,
+        ongoing: true,
+        autoCancel: false,
+        number: count,
+      );
+      final notificationDetails = NotificationDetails(android: androidDetails);
       await _localNotifications.show(
         id: 0,
-        title: Platform.isIOS ? null : 'Nuclear MOTD',
-        body: Platform.isIOS ? null : '$count unread message${count != 1 ? 's' : ''}',
+        title: 'Nuclear MOTD',
+        body: '$count unread message${count != 1 ? 's' : ''}',
         notificationDetails: notificationDetails,
       );
-
       debugPrint('📱 Silent notification posted successfully with count: $count');
     } catch (e) {
       debugPrint('📱 Error posting silent notification: $e');
