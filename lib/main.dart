@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:ui';
 
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -26,6 +27,19 @@ bool get _isMobilePlatform {
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Catch ALL unhandled Flutter errors instead of crashing
+  FlutterError.onError = (FlutterErrorDetails details) {
+    debugPrint('📱 FLUTTER ERROR: ${details.exception}');
+    debugPrint('📱 STACK: ${details.stack}');
+  };
+
+  // Catch ALL unhandled async/platform errors
+  PlatformDispatcher.instance.onError = (error, stack) {
+    debugPrint('📱 PLATFORM ERROR: $error');
+    debugPrint('📱 STACK: $stack');
+    return true; // returning true prevents the crash
+  };
 
   // Enable edge-to-edge on Android 15+
   if (!kIsWeb && Platform.isAndroid) {
