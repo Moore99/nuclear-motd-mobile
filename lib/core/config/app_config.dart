@@ -59,7 +59,7 @@ class AppConfig {
   // Production IDs (replace with your actual IDs)
   static const String _adMobAppIdAndroidProd = String.fromEnvironment(
     'ADMOB_APP_ID_ANDROID',
-    defaultValue: 'ca-app-pub-XXXXXXXXXXXXXXXX~YYYYYYYYYY',
+    defaultValue: 'ca-app-pub-5119215558360251~8772312709',
   );
   static const String _adMobAppIdIOSProd = String.fromEnvironment(
     'ADMOB_APP_ID_IOS',
@@ -75,7 +75,7 @@ class AppConfig {
   // Production IDs (replace with your actual IDs)
   static const String _bannerAdUnitIdAndroidProd = String.fromEnvironment(
     'ADMOB_BANNER_ANDROID',
-    defaultValue: 'ca-app-pub-XXXXXXXXXXXXXXXX/YYYYYYYYYY',
+    defaultValue: 'ca-app-pub-5119215558360251/4367356778',
   );
   static const String _bannerAdUnitIdIOSProd = String.fromEnvironment(
     'ADMOB_BANNER_IOS',
