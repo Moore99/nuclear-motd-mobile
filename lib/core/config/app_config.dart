@@ -83,7 +83,7 @@ class AppConfig {
   );
   static const String _nativeAdUnitIdAndroidProd = String.fromEnvironment(
     'ADMOB_NATIVE_ANDROID',
-    defaultValue: 'ca-app-pub-XXXXXXXXXXXXXXXX/YYYYYYYYYY',
+    defaultValue: 'ca-app-pub-5119215558360251/8193728206',
   );
   static const String _nativeAdUnitIdIOSProd = String.fromEnvironment(
     'ADMOB_NATIVE_IOS',
