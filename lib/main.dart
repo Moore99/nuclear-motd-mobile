@@ -15,6 +15,7 @@ import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
 import 'core/theme/theme_provider.dart';
 import 'core/services/push_notification_service.dart';
+import 'package:app_badge_plus/app_badge_plus.dart';
 import 'core/services/notification_service.dart';
 import 'features/messages/messages_provider.dart';
 import 'core/cache/message_cache_service.dart';
@@ -140,10 +141,15 @@ class _NuclearMotdAppState extends ConsumerState<NuclearMotdApp> {
 
   @override
   Widget build(BuildContext context) {
-    // Keep the home screen badge in sync with the local unread count.
-    // badgeSyncProvider watches unreadCountProvider and calls
-    // AppBadgePlus.updateBadge() whenever the count changes.
-    ref.watch(badgeSyncProvider);
+    // ref.listen fires on every change to unreadCountProvider, unlike
+    // ref.watch(Provider<void>) which Riverpod deduplicates because
+    // void == void and never notifies listeners a second time.
+    ref.listen<int>(unreadCountProvider, (_, next) {
+      AppBadgePlus.updateBadge(next).catchError((e) {
+        debugPrint('📱 Badge update error: $e');
+        return null;
+      });
+    });
 
     final router = ref.watch(appRouterProvider);
     final themeMode = ref.watch(themeModeProvider);
