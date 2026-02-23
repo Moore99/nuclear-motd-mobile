@@ -30,13 +30,14 @@ class CachedMessageAdapter extends TypeAdapter<CachedMessage> {
       citationText: fields[10] as String?,
       citationUrl: fields[11] as String?,
       cachedAt: fields[12] as DateTime,
+      readInApp: fields[13] as bool? ?? false,
     );
   }
 
   @override
   void write(BinaryWriter writer, CachedMessage obj) {
     writer
-      ..writeByte(13)
+      ..writeByte(14)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -62,7 +63,9 @@ class CachedMessageAdapter extends TypeAdapter<CachedMessage> {
       ..writeByte(11)
       ..write(obj.citationUrl)
       ..writeByte(12)
-      ..write(obj.cachedAt);
+      ..write(obj.cachedAt)
+      ..writeByte(13)
+      ..write(obj.readInApp);
   }
 
   @override

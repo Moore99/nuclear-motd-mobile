@@ -58,8 +58,6 @@ final messagesProvider =
 /// Used by BellIcon (in-app) and badgeSyncProvider (home screen badge).
 final unreadCountProvider = Provider<int>((ref) {
   final messages = ref.watch(messagesProvider).valueOrNull ?? [];
-  // Use != true (not == false) so cache-loaded messages (where read_in_app
-  // is absent/null) are also counted as unread, consistent with card display.
-  return messages.where((m) => m['read_in_app'] != true).length;
+  return messages.where((m) => m['read_in_app'] == false).length;
 });
 

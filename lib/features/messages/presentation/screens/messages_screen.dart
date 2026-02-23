@@ -125,7 +125,7 @@ class _MessagesScreenState extends ConsumerState<MessagesScreen> {
   Widget _buildMessagesList(List messages) {
     // Apply unread filter if active (client-side; no extra API call)
     final displayMessages = _showUnreadOnly
-        ? messages.where((m) => m['read_in_app'] != true).toList()
+        ? messages.where((m) => m['read_in_app'] == false).toList()
         : messages;
 
     if (displayMessages.isEmpty) {

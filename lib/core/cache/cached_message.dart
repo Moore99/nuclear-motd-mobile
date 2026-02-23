@@ -43,6 +43,9 @@ class CachedMessage extends HiveObject {
   @HiveField(12)
   final DateTime cachedAt;
 
+  @HiveField(13)
+  final bool readInApp;
+
   CachedMessage({
     required this.id,
     required this.title,
@@ -57,6 +60,7 @@ class CachedMessage extends HiveObject {
     this.citationText,
     this.citationUrl,
     required this.cachedAt,
+    this.readInApp = false,
   });
 
   /// Create from API response
@@ -75,6 +79,7 @@ class CachedMessage extends HiveObject {
       citationText: json['citation_text'] as String?,
       citationUrl: json['citation_url'] as String?,
       cachedAt: DateTime.now(),
+      readInApp: json['read_in_app'] as bool? ?? false,
     );
   }
 
@@ -93,6 +98,7 @@ class CachedMessage extends HiveObject {
       'status': status,
       'citation_text': citationText,
       'citation_url': citationUrl,
+      'read_in_app': readInApp,
     };
   }
 }
