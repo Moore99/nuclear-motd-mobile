@@ -20,15 +20,14 @@ class MainActivity: FlutterFragmentActivity() {
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
         // Register native ad factory — matches factoryId: 'listTile' in messages_screen.dart
-        flutterEngine.plugins.get(GoogleMobileAdsPlugin::class.java)?.also {
-            it.registerNativeAdFactory("listTile", ListTileNativeAdFactory(layoutInflater))
-        }
+        // Static method in google_mobile_ads v7.x: registerNativeAdFactory(engine, id, factory)
+        GoogleMobileAdsPlugin.registerNativeAdFactory(
+            flutterEngine, "listTile", ListTileNativeAdFactory(layoutInflater)
+        )
     }
 
     override fun cleanUpFlutterEngine(flutterEngine: FlutterEngine) {
-        flutterEngine.plugins.get(GoogleMobileAdsPlugin::class.java)?.also {
-            it.unregisterNativeAdFactory("listTile")
-        }
+        GoogleMobileAdsPlugin.unregisterNativeAdFactory(flutterEngine, "listTile")
         super.cleanUpFlutterEngine(flutterEngine)
     }
 }
