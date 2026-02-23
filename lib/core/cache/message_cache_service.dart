@@ -24,6 +24,11 @@ final isOnlineProvider = Provider<bool>((ref) {
   );
 });
 
+/// Increment this whenever CachedMessage schema changes (new HiveFields, etc.).
+/// On first launch after an upgrade, old-format entries are cleared so stale
+/// data (e.g. missing readInApp defaulting to false) is discarded.
+const int _cacheVersion = 2;
+
 /// Message cache service
 class MessageCacheService {
   static Box<CachedMessage>? _messagesBox;
@@ -40,8 +45,18 @@ class MessageCacheService {
       // Open boxes
       _messagesBox = await Hive.openBox<CachedMessage>(messagesBoxName);
       _dashboardBox = await Hive.openBox(dashboardBoxName);
-      
-      debugPrint('📦 Cache initialized');
+
+      // Clear messages cache if schema has been upgraded since last launch.
+      // Old entries may be missing new HiveFields (e.g. readInApp added in v2)
+      // and will default those fields to false, causing incorrect unread counts.
+      final storedVersion = _dashboardBox!.get('cache_version') as int? ?? 1;
+      if (storedVersion < _cacheVersion) {
+        await _messagesBox!.clear();
+        await _dashboardBox!.put('cache_version', _cacheVersion);
+        debugPrint('📦 Cache cleared: schema upgrade v$storedVersion → v$_cacheVersion');
+      }
+
+      debugPrint('📦 Cache initialized (v$_cacheVersion, ${_messagesBox!.length} messages)');
     } catch (e) {
       debugPrint('📦 Cache initialization error: $e');
     }
