@@ -1,3 +1,7 @@
+import 'dart:io';
+
+import 'package:app_badge_plus/app_badge_plus.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/config/app_config.dart';
@@ -51,4 +55,29 @@ class MessagesNotifier extends StateNotifier<AsyncValue<List>> {
 final messagesProvider =
     StateNotifierProvider<MessagesNotifier, AsyncValue<List>>((ref) {
   return MessagesNotifier(ref);
+});
+
+/// Unread count derived directly from the local messages list.
+/// No API call — updates instantly when a message is marked as read.
+/// Used by BellIcon (in-app) and badgeSyncProvider (home screen badge).
+final unreadCountProvider = Provider<int>((ref) {
+  final messages = ref.watch(messagesProvider).valueOrNull ?? [];
+  return messages.where((m) => m['read_in_app'] == false).length;
+});
+
+/// Keeps the iOS/Android home screen badge in sync with unreadCountProvider.
+/// Must be watched somewhere in the widget tree (main.dart) to stay active.
+/// Uses the same data source as the bell icon, so badge and bell always agree.
+final badgeSyncProvider = Provider<void>((ref) {
+  final count = ref.watch(unreadCountProvider);
+  if (!kIsWeb && (Platform.isIOS || Platform.isAndroid)) {
+    Future.microtask(() async {
+      try {
+        await AppBadgePlus.updateBadge(count);
+        debugPrint('📱 Badge synced to: $count');
+      } catch (e) {
+        debugPrint('📱 Badge sync error (non-fatal): $e');
+      }
+    });
+  }
 });

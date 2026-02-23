@@ -16,6 +16,7 @@ import 'core/theme/app_theme.dart';
 import 'core/theme/theme_provider.dart';
 import 'core/services/push_notification_service.dart';
 import 'core/services/notification_service.dart';
+import 'features/messages/messages_provider.dart';
 import 'core/cache/message_cache_service.dart';
 import 'core/services/bookmarks_service.dart';
 
@@ -139,6 +140,11 @@ class _NuclearMotdAppState extends ConsumerState<NuclearMotdApp> {
 
   @override
   Widget build(BuildContext context) {
+    // Keep the home screen badge in sync with the local unread count.
+    // badgeSyncProvider watches unreadCountProvider and calls
+    // AppBadgePlus.updateBadge() whenever the count changes.
+    ref.watch(badgeSyncProvider);
+
     final router = ref.watch(appRouterProvider);
     final themeMode = ref.watch(themeModeProvider);
 

@@ -5,12 +5,8 @@ import 'package:go_router/go_router.dart';
 import '../../../core/router/app_router.dart';
 import '../../messages/messages_provider.dart';
 
-/// Unread count derived directly from the local messages list —
-/// no extra API call, updates instantly when a message is marked as read.
-final unreadCountProvider = Provider<int>((ref) {
-  final messages = ref.watch(messagesProvider).valueOrNull ?? [];
-  return messages.where((m) => m['read_in_app'] == false).length;
-});
+// unreadCountProvider is defined in messages_provider.dart so it can be shared
+// with badgeSyncProvider (home screen badge) without circular imports.
 
 /// Bell icon for the AppBar showing the live unread message count.
 /// Tapping navigates to the Messages screen.
