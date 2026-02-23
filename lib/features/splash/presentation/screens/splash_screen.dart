@@ -8,6 +8,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/network/dio_client.dart';
 import '../../../../core/router/app_router.dart';
+import '../../../../core/services/notification_service.dart';
 import '../../../../core/services/push_notification_service.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/atom_logo.dart';
@@ -89,6 +90,15 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
 
       if (token != null) {
         ref.read(authTokenProvider.notifier).state = token;
+
+        // Token just restored — update badge immediately so it reflects current
+        // unread count. Without this, the first badge update is skipped because
+        // the notification service fires before the token is available.
+        try {
+          await ref.read(notificationServiceProvider).refreshBadge();
+        } catch (e) {
+          debugPrint('📱 Badge refresh after token restore failed (non-fatal): $e');
+        }
 
         if (_isMobilePlatform) {
           try {
