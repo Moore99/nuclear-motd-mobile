@@ -56,9 +56,7 @@
 		</array>
 		<key>NSFaceIDUsageDescription</key>
 		<string>Use Face ID to securely sign in to Nuclear MOTD</string>
-		<key>NSUserTrackingUsageDescription</key>
-		<string>This identifier will be used to show relevant ads and measure ad performance.</string>
-		<key>SKAdNetworkItems</key>
+<key>SKAdNetworkItems</key>
 		<array>
 			<dict>
 				<key>SKAdNetworkIdentifier</key>
