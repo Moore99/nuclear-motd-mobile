@@ -152,11 +152,29 @@ class NotificationService {
   /// Send FCM token to backend
   Future<void> _registerToken(String token) async {
     try {
+      // Skip if not authenticated — called again explicitly after login
+      final authToken = _ref.read(authTokenProvider);
+      if (authToken == null) {
+        debugPrint('📱 Skipping FCM registration — not authenticated yet');
+        return;
+      }
       final platform = Platform.isIOS ? 'ios' : 'android';
       await _apiService.registerFcmToken(token, platform);
       debugPrint('📱 FCM token registered with backend ($platform)');
     } catch (e) {
       debugPrint('📱 FCM token registration error (non-fatal): $e');
+    }
+  }
+
+  /// Register FCM token after login (call once auth token is available)
+  Future<void> registerTokenAfterLogin() async {
+    try {
+      final token = await _messaging.getToken();
+      if (token != null) {
+        await _registerToken(token);
+      }
+    } catch (e) {
+      debugPrint('📱 Post-login FCM registration error (non-fatal): $e');
     }
   }
 

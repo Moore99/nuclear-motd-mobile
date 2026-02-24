@@ -155,13 +155,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         await storage.write(key: 'saved_email', value: _emailController.text.trim());
         await storage.write(key: 'saved_password', value: _passwordController.text);
 
-        // Refresh badge after login
+        // Register FCM token and refresh badge after login
         try {
           final notificationService = ref.read(notificationServiceProvider);
+          await notificationService.registerTokenAfterLogin();
           await notificationService.refreshBadge();
-          debugPrint('📱 Badge refreshed after login');
+          debugPrint('📱 FCM token registered and badge refreshed after login');
         } catch (e) {
-          debugPrint('📱 Error refreshing badge after login: $e');
+          debugPrint('📱 Error in post-login notification setup: $e');
         }
 
         // Navigate to home
