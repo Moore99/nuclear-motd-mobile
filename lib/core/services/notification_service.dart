@@ -11,6 +11,10 @@ import 'api_service.dart';
 import '../network/dio_client.dart';
 import '../router/app_router.dart';
 
+/// Stores a pending deep link route from a notification tap in terminated state.
+/// Splash screen reads this after auth is confirmed and navigates there.
+final pendingDeepLinkProvider = StateProvider<String?>((ref) => null);
+
 /// Notification service provider
 final notificationServiceProvider = Provider<NotificationService>((ref) {
   final apiService = ref.watch(apiServiceProvider);
@@ -159,14 +163,16 @@ class NotificationService {
       _navigateToMessage(message);
     });
 
-    // Handle when app is opened from terminated state
+    // Handle when app is opened from terminated state — store as pending deep
+    // link; splash screen navigates there after auth is confirmed
     _messaging.getInitialMessage().then((RemoteMessage? message) {
       if (message != null) {
         debugPrint('📱 App opened from terminated state via notification');
-        // Delay to ensure the app/router is fully initialized before navigating
-        Future.delayed(const Duration(milliseconds: 500), () {
-          _navigateToMessage(message);
-        });
+        final messageIdStr = message.data['message_id'];
+        final messageId = messageIdStr != null ? int.tryParse(messageIdStr) : null;
+        final route = messageId != null ? '/messages/$messageId' : AppRoutes.messages;
+        _ref.read(pendingDeepLinkProvider.notifier).state = route;
+        debugPrint('📱 Stored pending deep link: $route');
       }
     });
   }

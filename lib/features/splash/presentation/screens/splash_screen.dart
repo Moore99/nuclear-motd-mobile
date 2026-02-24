@@ -109,7 +109,14 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
           }
         }
 
-        if (mounted) context.go(AppRoutes.home);
+        // Navigate to pending deep link (notification tap) or home
+        final pendingRoute = ref.read(pendingDeepLinkProvider);
+        if (pendingRoute != null) {
+          ref.read(pendingDeepLinkProvider.notifier).state = null;
+          if (mounted) context.go(pendingRoute);
+        } else {
+          if (mounted) context.go(AppRoutes.home);
+        }
       } else {
         if (mounted) context.go(AppRoutes.login);
       }
