@@ -127,20 +127,10 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
           }
         }
 
-        // Check if app was opened by tapping a push notification (terminated state)
-        String? deepLinkRoute;
-        if (_isMobilePlatform) {
-          try {
-            final initialMessage = await FirebaseMessaging.instance.getInitialMessage();
-            if (initialMessage != null) {
-              final messageIdStr = initialMessage.data['message_id'];
-              final messageId = messageIdStr != null ? int.tryParse(messageIdStr) : null;
-              deepLinkRoute = messageId != null ? '/messages/$messageId' : AppRoutes.messages;
-              debugPrint('📱 Deep link from notification: $deepLinkRoute');
-            }
-          } catch (e) {
-            debugPrint('📱 getInitialMessage error (non-fatal): $e');
-          }
+        // Use pending deep link stored earlier (from getInitialMessage at top of function)
+        final deepLinkRoute = ref.read(pendingDeepLinkProvider);
+        if (deepLinkRoute != null) {
+          ref.read(pendingDeepLinkProvider.notifier).state = null;
         }
 
         if (mounted) context.go(deepLinkRoute ?? AppRoutes.home);

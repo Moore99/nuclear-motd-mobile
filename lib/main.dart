@@ -31,24 +31,13 @@ bool get _isMobilePlatform {
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Catch ALL unhandled Flutter errors — report to Crashlytics in release mode
+  // Safe error handlers before Firebase is initialized
   FlutterError.onError = (FlutterErrorDetails details) {
-    if (kReleaseMode) {
-      FirebaseCrashlytics.instance.recordFlutterFatalError(details);
-    } else {
-      debugPrint('📱 FLUTTER ERROR: ${details.exception}');
-      debugPrint('📱 STACK: ${details.stack}');
-    }
+    debugPrint('📱 FLUTTER ERROR: ${details.exception}');
+    debugPrint('📱 STACK: ${details.stack}');
   };
-
-  // Catch ALL unhandled async/platform errors
   PlatformDispatcher.instance.onError = (error, stack) {
-    if (kReleaseMode) {
-      FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
-    } else {
-      debugPrint('📱 PLATFORM ERROR: $error');
-      debugPrint('📱 STACK: $stack');
-    }
+    debugPrint('📱 PLATFORM ERROR: $error');
     return true;
   };
 
@@ -93,6 +82,14 @@ void main() async {
         await Firebase.initializeApp();
         // Enable Crashlytics in release builds only
         await FirebaseCrashlytics.instance.setCrashlyticsCollectionEnabled(kReleaseMode);
+        // NOW safe to wire Crashlytics error handlers (Firebase is initialized)
+        if (kReleaseMode) {
+          FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
+          PlatformDispatcher.instance.onError = (error, stack) {
+            FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
+            return true;
+          };
+        }
         // Set up background message handler
         FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
         debugPrint('📱 Firebase initialized successfully');
