@@ -9,6 +9,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'api_service.dart';
 import '../network/dio_client.dart';
+import '../router/app_router.dart';
 
 /// Notification service provider
 final notificationServiceProvider = Provider<NotificationService>((ref) {
@@ -155,14 +156,17 @@ class NotificationService {
     // Handle notification taps when app is in background
     FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
       debugPrint('📱 Notification opened: ${message.notification?.title}');
-      // TODO: Use router to navigate to messages screen
+      _navigateToMessage(message);
     });
 
     // Handle when app is opened from terminated state
     _messaging.getInitialMessage().then((RemoteMessage? message) {
       if (message != null) {
-        debugPrint('📱 App opened from terminated state');
-        // TODO: Use router to navigate to messages screen
+        debugPrint('📱 App opened from terminated state via notification');
+        // Delay to ensure the app/router is fully initialized before navigating
+        Future.delayed(const Duration(milliseconds: 500), () {
+          _navigateToMessage(message);
+        });
       }
     });
   }
@@ -193,6 +197,28 @@ class NotificationService {
       }
     } catch (e) {
       debugPrint('📱 Post-login FCM registration error (non-fatal): $e');
+    }
+  }
+
+  /// Navigate to message detail screen when a notification is tapped
+  void _navigateToMessage(RemoteMessage message) {
+    try {
+      final messageIdStr = message.data['message_id'];
+      if (messageIdStr == null) {
+        debugPrint('📱 Notification tap: no message_id in data, going to messages list');
+        _ref.read(appRouterProvider).go(AppRoutes.messages);
+        return;
+      }
+      final messageId = int.tryParse(messageIdStr);
+      if (messageId == null) {
+        debugPrint('📱 Notification tap: invalid message_id "$messageIdStr"');
+        _ref.read(appRouterProvider).go(AppRoutes.messages);
+        return;
+      }
+      debugPrint('📱 Navigating to message $messageId');
+      _ref.read(appRouterProvider).go('/messages/$messageId');
+    } catch (e) {
+      debugPrint('📱 Navigation error: $e');
     }
   }
 
