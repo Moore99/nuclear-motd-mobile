@@ -36,7 +36,7 @@ dependencies:
   # Push Notifications & Crash Reporting
   firebase_core: ^4.4.0
   firebase_messaging: ^16.1.1
-  firebase_crashlytics: ^4.1.0
+  firebase_crashlytics: ^5.0.7
 
   # Ads (Google AdMob - unobtrusive)
   google_mobile_ads: ^7.0.0
