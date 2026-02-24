@@ -10,10 +10,20 @@ class MessagesNotifier extends StateNotifier<AsyncValue<List>> {
   final Ref ref;
 
   MessagesNotifier(this.ref) : super(const AsyncValue.loading()) {
+    // If the token isn't set yet (app still initialising), wait for it before
+    // loading. Covers the race where messagesProvider is created before auth
+    // is restored from secure storage (seen on iOS first launch).
+    ref.listen<String?>(authTokenProvider, (previous, next) {
+      if (next != null && previous == null) loadMessages();
+    });
     loadMessages();
   }
 
   Future<void> loadMessages() async {
+    // Skip silently if not authenticated — the listener above will retry
+    // once the token is available.
+    if (ref.read(authTokenProvider) == null) return;
+
     state = const AsyncValue.loading();
     try {
       final dio = ref.read(dioProvider);
