@@ -10,6 +10,7 @@ import 'package:local_auth/local_auth.dart';
 import '../../../../core/config/app_config.dart';
 import '../../../../core/network/dio_client.dart';
 import '../../../../core/router/app_router.dart';
+import '../../../../core/services/api_service.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/atom_logo.dart';
 import 'change_password_screen.dart';
@@ -239,6 +240,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     );
 
     if (confirmed == true) {
+      // Unregister FCM token before clearing auth (needs valid token to call API)
+      try {
+        await ref.read(apiServiceProvider).unregisterFcmToken();
+      } catch (e) {
+        debugPrint('📱 FCM unregister error (non-fatal): $e');
+      }
+
       // Clear token and saved credentials on explicit logout
       await clearAuthToken(ref);
       final storage = ref.read(secureStorageProvider);

@@ -50,6 +50,10 @@ class AppConfig {
   static const String health = '/health';
   static const String unreadCount = '/unread-count';
 
+  // Device registration endpoints
+  static const String deviceRegister = '/device/register';
+  static const String deviceUnregister = '/device/unregister';
+
   // Sponsor/Ad endpoints
   static const String sponsors = '/sponsors/active';
   static const String sponsorImpression = '/track/sponsor/impression';

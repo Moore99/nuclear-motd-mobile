@@ -185,6 +185,19 @@ class ApiService {
     final response = await _dio.get(AppConfig.unreadCount);
     return response.data['unread_count'] ?? 0;
   }
+
+  /// Register FCM token with backend for push notifications
+  Future<void> registerFcmToken(String token, String platform) async {
+    await _dio.post(
+      AppConfig.deviceRegister,
+      data: {'fcm_token': token, 'platform': platform},
+    );
+  }
+
+  /// Unregister device on logout (clears FCM token on server)
+  Future<void> unregisterFcmToken() async {
+    await _dio.post(AppConfig.deviceUnregister);
+  }
 }
 
 /// Auth response model

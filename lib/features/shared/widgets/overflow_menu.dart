@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/network/dio_client.dart';
 import '../../../core/router/app_router.dart';
+import '../../../core/services/api_service.dart';
 import '../../../core/services/push_notification_service.dart';
 import '../../../core/services/bookmarks_service.dart';
 import '../../../core/cache/message_cache_service.dart';
@@ -198,6 +199,14 @@ class OverflowMenu extends ConsumerWidget {
         debugPrint('📱 Failed to clear bookmarks: $e');
       }
       
+      // Unregister FCM token before clearing auth (needs valid token to call API)
+      try {
+        await ref.read(apiServiceProvider).unregisterFcmToken();
+        debugPrint('📱 FCM token unregistered');
+      } catch (e) {
+        debugPrint('📱 FCM unregister error (non-fatal): $e');
+      }
+
       // Clear token
       try {
         final storage = ref.read(secureStorageProvider);

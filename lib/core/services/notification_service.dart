@@ -115,35 +115,49 @@ class NotificationService {
 
   /// Initialize Firebase Cloud Messaging
   Future<void> _initializeMessaging() async {
-    // Get FCM token
+    // Get FCM token and register with backend
     final token = await _messaging.getToken();
     if (token != null) {
-      debugPrint('📱 FCM Token: $token');
-      // TODO: Send token to backend to register for push notifications
-      // await _apiService.registerFcmToken(token);
+      debugPrint('📱 FCM Token obtained, registering with backend...');
+      await _registerToken(token);
     }
+
+    // Re-register when token rotates
+    _messaging.onTokenRefresh.listen((newToken) {
+      debugPrint('📱 FCM Token refreshed, re-registering...');
+      _registerToken(newToken);
+    });
 
     // Handle foreground messages
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
       debugPrint('📱 Received foreground message: ${message.notification?.title}');
-      // When a new message arrives, refresh the unread count
       _updateBadge();
     });
 
     // Handle notification taps when app is in background
     FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
       debugPrint('📱 Notification opened: ${message.notification?.title}');
-      // Navigate to messages screen
-      // TODO: Use router to navigate to messages
+      // TODO: Use router to navigate to messages screen
     });
 
     // Handle when app is opened from terminated state
     _messaging.getInitialMessage().then((RemoteMessage? message) {
       if (message != null) {
         debugPrint('📱 App opened from terminated state');
-        // Navigate to messages screen
+        // TODO: Use router to navigate to messages screen
       }
     });
+  }
+
+  /// Send FCM token to backend
+  Future<void> _registerToken(String token) async {
+    try {
+      final platform = Platform.isIOS ? 'ios' : 'android';
+      await _apiService.registerFcmToken(token, platform);
+      debugPrint('📱 FCM token registered with backend ($platform)');
+    } catch (e) {
+      debugPrint('📱 FCM token registration error (non-fatal): $e');
+    }
   }
 
   /// Update app icon badge with current unread count
