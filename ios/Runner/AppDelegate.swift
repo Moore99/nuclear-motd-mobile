@@ -9,10 +9,10 @@ import google_mobile_ads
 // Corresponds to factoryId: 'listTile' in messages_screen.dart (messages list native ads).
 class ListTileNativeAdFactory: NSObject, FLTNativeAdFactory {
   func createNativeAd(
-    _ nativeAd: GADNativeAd,
+    _ nativeAd: NativeAd,
     customOptions: [AnyHashable: Any]? = nil
-  ) -> GADNativeAdView? {
-    let adView = GADNativeAdView()
+  ) -> NativeAdView? {
+    let adView = NativeAdView()
     adView.backgroundColor = .systemBackground
 
     // "Ad" badge
