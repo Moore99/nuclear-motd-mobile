@@ -25,6 +25,8 @@ class NotificationService {
   Timer? _syncTimer;
   static const String _badgeChannelId = 'badge_channel';
   static const String _badgeChannelName = 'App Badge';
+  static const String _alertChannelId = 'nuclear_motd_alerts';
+  static const String _alertChannelName = 'Nuclear MOTD Notifications';
 
   NotificationService(this._apiService, this._ref);
 
@@ -89,7 +91,22 @@ class NotificationService {
           .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
           ?.createNotificationChannel(androidChannel);
 
-      debugPrint('📱 Local notification channel created for badge support');
+      // High-importance channel for visible push notification alerts
+      const alertChannel = AndroidNotificationChannel(
+        _alertChannelId,
+        _alertChannelName,
+        description: 'Daily nuclear industry insights and updates',
+        importance: Importance.high,
+        showBadge: true,
+        playSound: true,
+        enableVibration: true,
+      );
+
+      await _localNotifications
+          .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
+          ?.createNotificationChannel(alertChannel);
+
+      debugPrint('📱 Local notification channels created');
     } catch (e) {
       debugPrint('📱 Error initializing local notifications: $e');
     }
@@ -128,9 +145,10 @@ class NotificationService {
       _registerToken(newToken);
     });
 
-    // Handle foreground messages
+    // Handle foreground messages — show a heads-up notification
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
       debugPrint('📱 Received foreground message: ${message.notification?.title}');
+      _showForegroundNotification(message);
       _updateBadge();
     });
 
@@ -175,6 +193,36 @@ class NotificationService {
       }
     } catch (e) {
       debugPrint('📱 Post-login FCM registration error (non-fatal): $e');
+    }
+  }
+
+  /// Show a visible heads-up notification when a push arrives in the foreground
+  Future<void> _showForegroundNotification(RemoteMessage message) async {
+    try {
+      final notification = message.notification;
+      if (notification == null) return;
+
+      final androidDetails = AndroidNotificationDetails(
+        _alertChannelId,
+        _alertChannelName,
+        channelDescription: 'Daily nuclear industry insights and updates',
+        importance: Importance.high,
+        priority: Priority.high,
+        showWhen: true,
+        playSound: true,
+        enableVibration: true,
+        autoCancel: true,
+      );
+      final notificationDetails = NotificationDetails(android: androidDetails);
+      await _localNotifications.show(
+        message.hashCode,
+        notification.title,
+        notification.body,
+        notificationDetails,
+      );
+      debugPrint('📱 Foreground notification displayed: ${notification.title}');
+    } catch (e) {
+      debugPrint('📱 Error showing foreground notification: $e');
     }
   }
 
