@@ -12,6 +12,10 @@ import UserNotifications
     // FirebaseApp.configure() is intentionally NOT called here.
     // FlutterFire handles Firebase initialization via Firebase.initializeApp() in Dart.
 
+    // Register native ad factory — matches factoryId: 'listTile' in messages_screen.dart
+    FLTGoogleMobileAdsPlugin.registerNativeAdFactory(
+      self, factoryId: "listTile", nativeAdFactory: ListTileNativeAdFactory())
+
     // Register for remote notifications
     if #available(iOS 10.0, *) {
       UNUserNotificationCenter.current().delegate = self
