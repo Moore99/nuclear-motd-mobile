@@ -63,6 +63,23 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
 
   Future<void> _checkAuthAndNavigate() async {
     try {
+      // Check for notification deep link BEFORE auth check so it survives
+      // both the authenticated path and the login flow
+      if (_isMobilePlatform) {
+        try {
+          final initialMessage = await FirebaseMessaging.instance.getInitialMessage();
+          if (initialMessage != null) {
+            final messageIdStr = initialMessage.data['message_id'];
+            final messageId = messageIdStr != null ? int.tryParse(messageIdStr) : null;
+            final route = messageId != null ? '/messages/$messageId' : AppRoutes.messages;
+            ref.read(pendingDeepLinkProvider.notifier).state = route;
+            debugPrint('📱 Stored pending deep link: $route');
+          }
+        } catch (e) {
+          debugPrint('📱 getInitialMessage error (non-fatal): $e');
+        }
+      }
+
       // Wait for animation
       await Future.delayed(const Duration(seconds: 2));
 

@@ -11,7 +11,7 @@ import 'package:local_auth/local_auth.dart';
 import '../../../../core/config/app_config.dart';
 import '../../../../core/network/dio_client.dart';
 import '../../../../core/router/app_router.dart';
-import '../../../../core/services/notification_service.dart';
+import '../../../../core/services/notification_service.dart' show notificationServiceProvider, pendingDeepLinkProvider;
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/atom_logo.dart';
 import '../../../profile/presentation/screens/about_screen.dart';
@@ -165,8 +165,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           debugPrint('📱 Error in post-login notification setup: $e');
         }
 
-        // Navigate to home
-        if (mounted) context.go(AppRoutes.home);
+        // Navigate to pending deep link (notification tap) or home
+        final pendingRoute = ref.read(pendingDeepLinkProvider);
+        if (pendingRoute != null) {
+          ref.read(pendingDeepLinkProvider.notifier).state = null;
+          if (mounted) context.go(pendingRoute);
+        } else {
+          if (mounted) context.go(AppRoutes.home);
+        }
       } else {
         setState(() {
           _errorMessage = data['message'] ?? 'Login failed. Please try again.';
