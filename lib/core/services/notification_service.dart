@@ -215,10 +215,10 @@ class NotificationService {
       );
       final notificationDetails = NotificationDetails(android: androidDetails);
       await _localNotifications.show(
-        message.hashCode,
-        notification.title,
-        notification.body,
-        notificationDetails,
+        id: message.hashCode,
+        title: notification.title,
+        body: notification.body,
+        notificationDetails: notificationDetails,
       );
       debugPrint('📱 Foreground notification displayed: ${notification.title}');
     } catch (e) {
