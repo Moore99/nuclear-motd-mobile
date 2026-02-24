@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:ui';
 
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -30,17 +31,25 @@ bool get _isMobilePlatform {
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Catch ALL unhandled Flutter errors instead of crashing
+  // Catch ALL unhandled Flutter errors — report to Crashlytics in release mode
   FlutterError.onError = (FlutterErrorDetails details) {
-    debugPrint('📱 FLUTTER ERROR: ${details.exception}');
-    debugPrint('📱 STACK: ${details.stack}');
+    if (kReleaseMode) {
+      FirebaseCrashlytics.instance.recordFlutterFatalError(details);
+    } else {
+      debugPrint('📱 FLUTTER ERROR: ${details.exception}');
+      debugPrint('📱 STACK: ${details.stack}');
+    }
   };
 
   // Catch ALL unhandled async/platform errors
   PlatformDispatcher.instance.onError = (error, stack) {
-    debugPrint('📱 PLATFORM ERROR: $error');
-    debugPrint('📱 STACK: $stack');
-    return true; // returning true prevents the crash
+    if (kReleaseMode) {
+      FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
+    } else {
+      debugPrint('📱 PLATFORM ERROR: $error');
+      debugPrint('📱 STACK: $stack');
+    }
+    return true;
   };
 
   // Enable edge-to-edge on Android 15+
@@ -82,6 +91,8 @@ void main() async {
       debugPrint('📱 Initializing Firebase...');
       try {
         await Firebase.initializeApp();
+        // Enable Crashlytics in release builds only
+        await FirebaseCrashlytics.instance.setCrashlyticsCollectionEnabled(kReleaseMode);
         // Set up background message handler
         FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
         debugPrint('📱 Firebase initialized successfully');
