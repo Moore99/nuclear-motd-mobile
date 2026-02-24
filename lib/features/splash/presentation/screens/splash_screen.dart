@@ -8,6 +8,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/network/dio_client.dart';
 import '../../../../core/router/app_router.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import '../../../../core/services/notification_service.dart';
 import '../../../../core/services/push_notification_service.dart';
 import '../../../../core/theme/app_theme.dart';
@@ -109,14 +110,23 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
           }
         }
 
-        // Navigate to pending deep link (notification tap) or home
-        final pendingRoute = ref.read(pendingDeepLinkProvider);
-        if (pendingRoute != null) {
-          ref.read(pendingDeepLinkProvider.notifier).state = null;
-          if (mounted) context.go(pendingRoute);
-        } else {
-          if (mounted) context.go(AppRoutes.home);
+        // Check if app was opened by tapping a push notification (terminated state)
+        String? deepLinkRoute;
+        if (_isMobilePlatform) {
+          try {
+            final initialMessage = await FirebaseMessaging.instance.getInitialMessage();
+            if (initialMessage != null) {
+              final messageIdStr = initialMessage.data['message_id'];
+              final messageId = messageIdStr != null ? int.tryParse(messageIdStr) : null;
+              deepLinkRoute = messageId != null ? '/messages/$messageId' : AppRoutes.messages;
+              debugPrint('📱 Deep link from notification: $deepLinkRoute');
+            }
+          } catch (e) {
+            debugPrint('📱 getInitialMessage error (non-fatal): $e');
+          }
         }
+
+        if (mounted) context.go(deepLinkRoute ?? AppRoutes.home);
       } else {
         if (mounted) context.go(AppRoutes.login);
       }
