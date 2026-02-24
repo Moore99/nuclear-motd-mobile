@@ -196,6 +196,16 @@ class NotificationService {
   /// Post a silent persistent notification for Samsung badge support (Android only).
   Future<void> _postSilentNotification(int count) async {
     try {
+      // Guard: skip if notification permission not granted — avoids Samsung
+      // "not authorized to use this function" system toast on first launch.
+      final androidImpl = _localNotifications
+          .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
+      final permitted = await androidImpl?.areNotificationsEnabled() ?? false;
+      if (!permitted) {
+        debugPrint('📱 Skipping silent notification — permission not granted');
+        return;
+      }
+
       debugPrint('📱 Posting silent notification with count: $count');
       final androidDetails = AndroidNotificationDetails(
         _badgeChannelId,
