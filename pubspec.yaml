@@ -1,7 +1,7 @@
 name: nuclear_motd
 description: Nuclear MOTD - Daily messages for the nuclear industry
 publish_to: "none"
-version: 1.0.0+68
+version: 1.0.0+67
 
 environment:
   sdk: ">=3.2.0 <4.0.0"
