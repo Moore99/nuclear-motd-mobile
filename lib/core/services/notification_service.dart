@@ -202,9 +202,26 @@ class NotificationService {
   /// Register FCM token after login (call once auth token is available)
   Future<void> registerTokenAfterLogin() async {
     try {
-      final token = await _messaging.getToken();
+      // On iOS, requestPermission() triggers registerForRemoteNotifications(),
+      // which is required before getToken() can return an APNs-backed FCM token.
+      if (!kIsWeb && Platform.isIOS) {
+        await _messaging.requestPermission();
+      }
+
+      // getToken() can return null on iOS if APNs registration is still in
+      // progress. Retry up to 3 times with a short delay.
+      String? token;
+      for (int attempt = 1; attempt <= 3; attempt++) {
+        token = await _messaging.getToken();
+        if (token != null) break;
+        debugPrint('📱 FCM getToken attempt $attempt returned null, retrying...');
+        await Future.delayed(const Duration(seconds: 3));
+      }
+
       if (token != null) {
         await _registerToken(token);
+      } else {
+        debugPrint('📱 FCM token unavailable after retries — check iOS notification permissions');
       }
     } catch (e) {
       debugPrint('📱 Post-login FCM registration error (non-fatal): $e');
