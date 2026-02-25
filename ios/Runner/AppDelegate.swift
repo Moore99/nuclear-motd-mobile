@@ -1,7 +1,5 @@
 import Flutter
 import UIKit
-import FirebaseMessaging
-import UserNotifications
 import google_mobile_ads
 
 // MARK: - Native Ad Factory
@@ -106,30 +104,18 @@ class ListTileNativeAdFactory: NSObject, FLTNativeAdFactory {
   ) -> Bool {
     // FirebaseApp.configure() is intentionally NOT called here.
     // FlutterFire handles Firebase initialization via Firebase.initializeApp() in Dart.
+    //
+    // APNs registration and UNUserNotificationCenter delegate setup are handled
+    // by FlutterFire's method swizzling via GeneratedPluginRegistrant.register().
+    // Do NOT manually call registerForRemoteNotifications() or set apnsToken here —
+    // Firebase may not be configured yet when the APNs callback fires, causing
+    // getToken() to return null permanently.
 
     // Register native ad factory — matches factoryId: 'listTile' in messages_screen.dart
     FLTGoogleMobileAdsPlugin.registerNativeAdFactory(
       self, factoryId: "listTile", nativeAdFactory: ListTileNativeAdFactory())
 
-    // Register for remote notifications
-    if #available(iOS 10.0, *) {
-      UNUserNotificationCenter.current().delegate = self
-      let authOptions: UNAuthorizationOptions = [.alert, .badge, .sound]
-      UNUserNotificationCenter.current().requestAuthorization(
-        options: authOptions,
-        completionHandler: { _, _ in }
-      )
-    }
-    application.registerForRemoteNotifications()
-
     GeneratedPluginRegistrant.register(with: self)
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
-  }
-
-  // Handle APNs token - pass to Firebase Messaging
-  override func application(_ application: UIApplication,
-                            didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
-    Messaging.messaging().apnsToken = deviceToken
-    super.application(application, didRegisterForRemoteNotificationsWithDeviceToken: deviceToken)
   }
 }
