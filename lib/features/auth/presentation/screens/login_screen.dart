@@ -167,13 +167,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         }
 
         // Firebase-only step: get FCM token (no Dio inside — Dio from
-        // NotificationService fails silently on iOS).
-        final notificationService = ref.read(notificationServiceProvider);
+        // NotificationService fails silently on iOS). Entire block is wrapped
+        // so any unexpected exception cannot surface as a login error.
         Map<String, dynamic> rtalResult = {'status': 'not-called', 'token': null};
+        NotificationService? notificationService;
         try {
+          notificationService = ref.read(notificationServiceProvider);
           rtalResult = await notificationService.registerTokenAfterLogin();
         } catch (e) {
           rtalResult = {'status': 'threw:${e.toString().substring(0, 80)}', 'token': null};
+          debugPrint('📱 registerTokenAfterLogin error: $e');
         }
 
         // Report result using our working Dio (from login_screen WidgetRef).
@@ -202,7 +205,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         }
 
         try {
-          await notificationService.refreshBadge();
+          await notificationService?.refreshBadge();
         } catch (e) {
           debugPrint('📱 Badge refresh error: $e');
         }
