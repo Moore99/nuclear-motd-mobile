@@ -144,13 +144,15 @@ class _MessagesScreenState extends ConsumerState<MessagesScreen> {
       );
     }
 
-    // Insert native ad after every 5 items
+    // Insert native ad once after the 5th item — AdWidget can only exist in
+    // one place in the widget tree; multiple slots with a single NativeAd crash.
     final itemsWithAds = <dynamic>[];
+    bool adInserted = false;
     for (var i = 0; i < displayMessages.length; i++) {
       itemsWithAds.add(displayMessages[i]);
-      // Insert ad placeholder after every 5 items (but not after the last)
-      if ((i + 1) % 5 == 0 && i < displayMessages.length - 1) {
+      if (!adInserted && (i + 1) % 5 == 0 && i < displayMessages.length - 1) {
         itemsWithAds.add('ad');
+        adInserted = true;
       }
     }
 
