@@ -227,12 +227,15 @@ class NotificationService {
           try {
             final apnsToken = await _messaging.getAPNSToken();
             debugPrint('📱 APNs token available: ${apnsToken != null}');
+            final authToken = _ref.read(authTokenProvider);
             final dio = _ref.read(dioProvider);
-            await dio.get('/health', queryParameters: {
-              'diag': 'ios_fcm',
+            await dio.post('/device/push-diagnostic', data: {
               'apns': apnsToken != null ? 'ok' : 'null',
               'fcm': 'null',
+              'attempt': '3',
+              'email': authToken != null ? 'authenticated' : 'no-auth',
             });
+            debugPrint('📱 Diagnostic sent to server');
           } catch (e) {
             debugPrint('📱 Diagnostic call error: $e');
           }
