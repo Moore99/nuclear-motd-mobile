@@ -26,14 +26,19 @@ class NotificationService {
   final ApiService _apiService;
   final Ref _ref;
   final FirebaseMessaging _messaging = FirebaseMessaging.instance;
-  final FlutterLocalNotificationsPlugin _localNotifications = FlutterLocalNotificationsPlugin();
+  // Null on iOS — instantiating FlutterLocalNotificationsPlugin on iOS hijacks
+  // UNUserNotificationCenter delegate, blocking Firebase from receiving the
+  // APNs token and making getToken() return null.
+  final FlutterLocalNotificationsPlugin? _localNotifications;
   Timer? _syncTimer;
   static const String _badgeChannelId = 'badge_channel';
   static const String _badgeChannelName = 'App Badge';
   static const String _alertChannelId = 'nuclear_motd_alerts';
   static const String _alertChannelName = 'Nuclear MOTD Notifications';
 
-  NotificationService(this._apiService, this._ref);
+  NotificationService(this._apiService, this._ref)
+      : _localNotifications =
+            (!kIsWeb && Platform.isAndroid) ? FlutterLocalNotificationsPlugin() : null;
 
   /// Initialize notification service
   Future<void> initialize() async {
@@ -78,7 +83,7 @@ class NotificationService {
       const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
       const initSettings = InitializationSettings(android: androidSettings);
 
-      await _localNotifications.initialize(settings: initSettings);
+      await _localNotifications!.initialize(settings: initSettings);
       debugPrint('📱 Local notifications initialized');
 
       // Create a notification channel for badge updates
@@ -246,7 +251,7 @@ class NotificationService {
         autoCancel: true,
       );
       final notificationDetails = NotificationDetails(android: androidDetails);
-      await _localNotifications.show(
+      await _localNotifications!.show(
         id: message.hashCode,
         title: notification.title,
         body: notification.body,
@@ -293,7 +298,7 @@ class NotificationService {
       } else {
         await AppBadgePlus.updateBadge(0);
         if (Platform.isAndroid) {
-          await _localNotifications.cancelAll();
+          await _localNotifications!.cancelAll();
         }
         debugPrint('📱 Badge removed (count is 0)');
       }
@@ -310,7 +315,7 @@ class NotificationService {
     try {
       // Guard: skip if notification permission not granted — avoids Samsung
       // "not authorized to use this function" system toast on first launch.
-      final androidImpl = _localNotifications
+      final androidImpl = _localNotifications!
           .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
       final permitted = await androidImpl?.areNotificationsEnabled() ?? false;
       if (!permitted) {
@@ -334,7 +339,7 @@ class NotificationService {
         number: count,
       );
       final notificationDetails = NotificationDetails(android: androidDetails);
-      await _localNotifications.show(
+      await _localNotifications!.show(
         id: 0,
         title: 'Nuclear MOTD',
         body: '$count unread message${count != 1 ? 's' : ''}',
