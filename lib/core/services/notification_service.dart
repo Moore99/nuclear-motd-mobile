@@ -198,9 +198,12 @@ class NotificationService {
 
   /// Register FCM token after login (call once auth token is available)
   Future<void> registerTokenAfterLogin() async {
+    // Use dioProvider directly (same pattern as login_screen.dart which works on iOS)
+    final diagDio = _ref.read(dioProvider);
+
     // Diagnostic: confirm function is entered (synchronous — no await before this)
     try {
-      await _apiService.sendDiagnostic({
+      await diagDio.post('/device/push-diagnostic', data: {
         'stage': 'rtal-start',
         'platform': !kIsWeb && Platform.isIOS ? 'ios' : 'android',
       });
@@ -216,7 +219,7 @@ class NotificationService {
       }
 
       try {
-        await _apiService.sendDiagnostic({'stage': 'post-permission'});
+        await diagDio.post('/device/push-diagnostic', data: {'stage': 'post-permission'});
       } catch (e) {
         debugPrint('📱 post-permission diagnostic error: $e');
       }
@@ -240,9 +243,9 @@ class NotificationService {
 
       final authToken = _ref.read(authTokenProvider);
 
-      // Diagnostic: report token + auth status via _apiService (known working on iOS)
+      // Diagnostic: report token + auth status
       try {
-        await _apiService.sendDiagnostic({
+        await diagDio.post('/device/push-diagnostic', data: {
           'stage': 'post-token',
           'fcm': token != null ? 'ok' : 'null',
           'auth': authToken != null ? 'ok' : 'null',
@@ -261,7 +264,7 @@ class NotificationService {
           final apnsToken = await _messaging.getAPNSToken().catchError((_) => null);
           debugPrint('📱 APNs token available: ${apnsToken != null}');
           try {
-            await _apiService.sendDiagnostic({
+            await diagDio.post('/device/push-diagnostic', data: {
               'stage': 'apns-check',
               'apns': apnsToken != null ? 'ok' : 'null',
               'fcm': 'null',
@@ -277,7 +280,7 @@ class NotificationService {
       // Report the exception so we can see it server-side
       try {
         final msg = e.toString();
-        await _apiService.sendDiagnostic({
+        await diagDio.post('/device/push-diagnostic', data: {
           'stage': 'rtal-error',
           'error': msg.substring(0, msg.length.clamp(0, 200)),
         });
