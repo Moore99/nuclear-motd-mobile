@@ -166,20 +166,20 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           debugPrint('📱 Login-screen diagnostic error: $e');
         }
 
-        // DIAGNOSTIC: second sequential call — tests if iOS blocks calls after first one
-        try {
-          await diagDio.post('/device/push-diagnostic',
-              data: {'stage': 'pre-rtal', 'auth': 'ok'});
-          debugPrint('📱 pre-rtal diagnostic sent');
-        } catch (e) {
-          debugPrint('📱 pre-rtal diagnostic error: $e');
-        }
-
-        // Register FCM token and refresh badge after login
-        // Pass diagDio (WidgetRef Dio) so NotificationService uses the working Dio
+        // Register FCM token and refresh badge after login.
+        // registerTokenAfterLogin returns a status string — we report it here
+        // because network calls from inside NotificationService fail on iOS.
         try {
           final notificationService = ref.read(notificationServiceProvider);
-          await notificationService.registerTokenAfterLogin(diagDio);
+          final rtalStatus = await notificationService.registerTokenAfterLogin();
+          try {
+            await diagDio.post('/device/push-diagnostic', data: {
+              'stage': 'rtal-result',
+              'result': rtalStatus,
+            });
+          } catch (e) {
+            debugPrint('📱 rtal-result diagnostic error: $e');
+          }
           await notificationService.refreshBadge();
           debugPrint('📱 FCM token registered and badge refreshed after login');
         } catch (e) {

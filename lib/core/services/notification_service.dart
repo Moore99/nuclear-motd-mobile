@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:io';
-import 'package:dio/dio.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:app_badge_plus/app_badge_plus.dart';
@@ -197,104 +196,61 @@ class NotificationService {
   }
 
   /// Register FCM token after login (call once auth token is available).
-  /// [callerDio] is the Dio from the calling widget's WidgetRef — passed in
-  /// because _ref.read(dioProvider) from a ProviderRef fails silently on iOS.
-  Future<void> registerTokenAfterLogin([Dio? callerDio]) async {
-    // Prefer caller-supplied Dio (WidgetRef context, known working on iOS)
-    // Fall back to _ref if not provided.
-    final Dio diagDio;
+  /// Returns a diagnostic string describing what happened — caller reports it
+  /// to the server, since network calls from inside this function fail on iOS.
+  Future<String> registerTokenAfterLogin() async {
+    final steps = <String>['entered'];
     try {
-      diagDio = callerDio ?? _ref.read(dioProvider);
-    } catch (e) {
-      debugPrint('📱 registerTokenAfterLogin: failed to get Dio: $e');
-      return;
-    }
+      final platform = !kIsWeb && Platform.isIOS ? 'ios' : 'android';
+      steps.add('platform=$platform');
 
-    // Diagnostic: confirm function is entered (synchronous — no await before this)
-    try {
-      await diagDio.post('/device/push-diagnostic', data: {
-        'stage': 'rtal-start',
-        'platform': !kIsWeb && Platform.isIOS ? 'ios' : 'android',
-      });
-    } catch (e) {
-      debugPrint('📱 rtal-start diagnostic error: $e');
-    }
+      final authToken = _ref.read(authTokenProvider);
+      steps.add('auth=${authToken != null ? 'ok' : 'null'}');
 
-    try {
       // On iOS, requestPermission() triggers registerForRemoteNotifications(),
       // which is required before getToken() can return an APNs-backed FCM token.
       if (!kIsWeb && Platform.isIOS) {
-        await _messaging.requestPermission();
-      }
-
-      try {
-        await diagDio.post('/device/push-diagnostic', data: {'stage': 'post-permission'});
-      } catch (e) {
-        debugPrint('📱 post-permission diagnostic error: $e');
+        try {
+          await _messaging.requestPermission();
+          steps.add('permission=ok');
+        } catch (e) {
+          steps.add('permission=error:${e.toString().substring(0, e.toString().length.clamp(0, 80))}');
+        }
       }
 
       // getToken() can return null on iOS if APNs registration is still in
       // progress. Retry up to 3 times with a short delay.
       String? token;
-      String? getTokenError;
       for (int attempt = 1; attempt <= 3; attempt++) {
         try {
           token = await _messaging.getToken();
+          steps.add('getToken$attempt=${token != null ? 'ok' : 'null'}');
         } catch (e) {
-          getTokenError = e.toString();
-          debugPrint('📱 FCM getToken attempt $attempt threw: $e');
+          steps.add('getToken$attempt=error:${e.toString().substring(0, e.toString().length.clamp(0, 80))}');
           break;
         }
         if (token != null) break;
-        debugPrint('📱 FCM getToken attempt $attempt returned null, retrying...');
         await Future.delayed(const Duration(seconds: 3));
       }
 
-      final authToken = _ref.read(authTokenProvider);
-
-      // Diagnostic: report token + auth status
-      try {
-        await diagDio.post('/device/push-diagnostic', data: {
-          'stage': 'post-token',
-          'fcm': token != null ? 'ok' : 'null',
-          'auth': authToken != null ? 'ok' : 'null',
-          'platform': Platform.isIOS ? 'ios' : 'android',
-          if (getTokenError != null) 'error': getTokenError.substring(0, getTokenError.length.clamp(0, 200)),
-        });
-      } catch (e) {
-        debugPrint('📱 post-token diagnostic error: $e');
-      }
-
       if (token != null) {
-        await _registerToken(token);
-      } else {
-        debugPrint('📱 FCM token unavailable after retries');
-        if (!kIsWeb && Platform.isIOS) {
-          final apnsToken = await _messaging.getAPNSToken().catchError((_) => null);
-          debugPrint('📱 APNs token available: ${apnsToken != null}');
-          try {
-            await diagDio.post('/device/push-diagnostic', data: {
-              'stage': 'apns-check',
-              'apns': apnsToken != null ? 'ok' : 'null',
-              'fcm': 'null',
-              'auth': authToken != null ? 'ok' : 'null',
-            });
-          } catch (e) {
-            debugPrint('📱 apns-check diagnostic error: $e');
-          }
+        try {
+          await _registerToken(token);
+          steps.add('register=ok');
+        } catch (e) {
+          steps.add('register=error');
         }
+      } else if (!kIsWeb && Platform.isIOS) {
+        final apnsToken = await _messaging.getAPNSToken().catchError((_) => null);
+        steps.add('apns=${apnsToken != null ? 'ok' : 'null'}');
       }
     } catch (e) {
-      debugPrint('📱 Post-login FCM registration error (non-fatal): $e');
-      // Report the exception so we can see it server-side
-      try {
-        final msg = e.toString();
-        await diagDio.post('/device/push-diagnostic', data: {
-          'stage': 'rtal-error',
-          'error': msg.substring(0, msg.length.clamp(0, 200)),
-        });
-      } catch (_) {}
+      steps.add('outer-error:${e.toString().substring(0, e.toString().length.clamp(0, 100))}');
     }
+
+    final result = steps.join('|');
+    debugPrint('📱 registerTokenAfterLogin: $result');
+    return result;
   }
 
   /// Navigate to message detail screen when a notification is tapped
