@@ -156,8 +156,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         await storage.write(key: 'saved_password', value: _passwordController.text);
 
         // DIAGNOSTIC: confirm post-login code runs and dioProvider works
+        // Keep diagDio in scope so we can pass it to registerTokenAfterLogin
+        final diagDio = ref.read(dioProvider);
         try {
-          final diagDio = ref.read(dioProvider);
           await diagDio.post('/device/push-diagnostic',
               data: {'stage': 'login-screen', 'auth': 'ok'});
           debugPrint('📱 Login-screen diagnostic sent');
@@ -166,9 +167,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         }
 
         // Register FCM token and refresh badge after login
+        // Pass diagDio (WidgetRef Dio) so NotificationService uses the working Dio
         try {
           final notificationService = ref.read(notificationServiceProvider);
-          await notificationService.registerTokenAfterLogin();
+          await notificationService.registerTokenAfterLogin(diagDio);
           await notificationService.refreshBadge();
           debugPrint('📱 FCM token registered and badge refreshed after login');
         } catch (e) {

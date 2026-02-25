@@ -196,10 +196,19 @@ class NotificationService {
     }
   }
 
-  /// Register FCM token after login (call once auth token is available)
-  Future<void> registerTokenAfterLogin() async {
-    // Use dioProvider directly (same pattern as login_screen.dart which works on iOS)
-    final diagDio = _ref.read(dioProvider);
+  /// Register FCM token after login (call once auth token is available).
+  /// [callerDio] is the Dio from the calling widget's WidgetRef — passed in
+  /// because _ref.read(dioProvider) from a ProviderRef fails silently on iOS.
+  Future<void> registerTokenAfterLogin([Dio? callerDio]) async {
+    // Prefer caller-supplied Dio (WidgetRef context, known working on iOS)
+    // Fall back to _ref if not provided.
+    final Dio diagDio;
+    try {
+      diagDio = callerDio ?? _ref.read(dioProvider);
+    } catch (e) {
+      debugPrint('📱 registerTokenAfterLogin: failed to get Dio: $e');
+      return;
+    }
 
     // Diagnostic: confirm function is entered (synchronous — no await before this)
     try {
