@@ -211,7 +211,8 @@ class NotificationService {
       // which is required before getToken() can return an APNs-backed FCM token.
       if (!kIsWeb && Platform.isIOS) {
         try {
-          await _messaging.requestPermission();
+          await _messaging.requestPermission()
+              .timeout(const Duration(seconds: 8));
           steps.add('permission=ok');
         } catch (e) {
           steps.add('permission=error:${e.toString().substring(0, e.toString().length.clamp(0, 80))}');
@@ -223,14 +224,15 @@ class NotificationService {
       String? token;
       for (int attempt = 1; attempt <= 3; attempt++) {
         try {
-          token = await _messaging.getToken();
+          token = await _messaging.getToken()
+              .timeout(const Duration(seconds: 8));
           steps.add('getToken$attempt=${token != null ? 'ok' : 'null'}');
         } catch (e) {
           steps.add('getToken$attempt=error:${e.toString().substring(0, e.toString().length.clamp(0, 80))}');
           break;
         }
         if (token != null) break;
-        await Future.delayed(const Duration(seconds: 3));
+        await Future.delayed(const Duration(seconds: 2));
       }
 
       if (token != null) {
