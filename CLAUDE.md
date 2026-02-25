@@ -255,11 +255,11 @@ has timing/reliability issues causing silent fallback to stale cache.
 **How it works**: `unreadCountProvider` is a `Provider<int>` that watches `messagesProvider`.
 It updates automatically — no API call needed. If it's wrong, `messagesProvider` has stale data.
 
-### App Icon Badge Not Showing (iOS)
+### App Icon Badge (iOS)
 
 `AppBadgePlus.updateBadge(count)` is called after mark-read. Badge requires notification
 permission. On iOS 16+, `UNUserNotificationCenter.setBadgeCount()` is used internally.
-Still under investigation if number appears on home screen icon.
+Badge count is working (confirmed build 39).
 
 ### API Calls Failing (401)
 
@@ -285,15 +285,35 @@ redirects to login screen.
 4. Launch manually on device
 5. `flutter logs` to monitor
 
-## Current Build Status (2026-02-21)
+## Current Build Status (2026-02-23)
 
-**Build 0.9.6+27** — confirmed working on iOS via Codemagic/TestFlight
+**Build 0.9.6+39** — confirmed loading on iOS (Codemagic/TestFlight) and Android (Samsung via ADB)
 
-- iOS boots, authenticates, loads all messages
-- Mark-as-read works: instant visual feedback via optimistic local update
+- iOS and Android boot, authenticate, load all messages
+- Mark-as-read: instant visual feedback via optimistic local update
 - Bell count updates instantly when messages are read
 - Unread filter works in messages list
-- App icon badge (iOS home screen number): **under investigation**
-- Backend `/messages` endpoint changes (all messages, unread-first):
-  **needs server deploy** — user must SSH in and run
-  `sudo bash /home/nuclear-motd/restart_server.sh`
+- App icon badge working on iOS
+- Android: Samsung "not authorized" toast suppressed (permission check before silent notification)
+- AdMob: real unit IDs wired on both platforms, ad slots present, **ads not yet serving**
+  (pending AdMob account approval: payment info + app store links required)
+
+### AdMob Setup Checklist
+
+- [ ] Enter payment info in AdMob console
+- [ ] Android: publish AAB to Google Play (Internal Testing OK) → link in AdMob
+- [ ] iOS: Apple approves build → link iOS app in AdMob console
+- Ads begin serving 24–48 h after linking; to verify layout use test unit IDs in `app_config.dart`
+
+### Native Ad Factory Implementation
+
+**Android** (`android/app/src/main/kotlin/com/nuclearmotd/mobile/`):
+- `ListTileNativeAdFactory.kt` — implements `GoogleMobileAdsPlugin.NativeAdFactory`
+- `res/layout/native_ad_list_tile.xml` — 72dp horizontal layout (Ad badge, advertiser, headline, body, CTA)
+- `MainActivity.kt` — registers/unregisters factory via static `GoogleMobileAdsPlugin.registerNativeAdFactory(flutterEngine, "listTile", factory)`
+
+**iOS** (`ios/Runner/AppDelegate.swift`):
+- `ListTileNativeAdFactory` class inlined directly (standalone .swift files need project.pbxproj — avoid)
+- `import google_mobile_ads` required to access `FLTNativeAdFactory`, `FLTGoogleMobileAdsPlugin`
+- Type names: `NativeAd` and `NativeAdView` (NOT the old `GADNativeAd`/`GADNativeAdView`)
+- Registered via `FLTGoogleMobileAdsPlugin.registerNativeAdFactory(self, factoryId: "listTile", ...)`

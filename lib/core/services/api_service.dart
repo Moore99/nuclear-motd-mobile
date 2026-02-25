@@ -198,6 +198,11 @@ class ApiService {
   Future<void> unregisterFcmToken() async {
     await _dio.post(AppConfig.deviceUnregister);
   }
+
+  /// Send diagnostic payload to backend (used during FCM debugging)
+  Future<void> sendDiagnostic(Map<String, dynamic> data) async {
+    await _dio.post('/device/push-diagnostic', data: data);
+  }
 }
 
 /// Auth response model

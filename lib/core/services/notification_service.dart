@@ -186,15 +186,11 @@ class NotificationService {
   /// Send FCM token to backend
   Future<void> _registerToken(String token) async {
     try {
-      // Skip if not authenticated — called again explicitly after login
       final authToken = _ref.read(authTokenProvider);
-      if (authToken == null) {
-        debugPrint('📱 Skipping FCM registration — not authenticated yet');
-        return;
-      }
       final platform = Platform.isIOS ? 'ios' : 'android';
+      // DIAGNOSTIC: report auth state via _apiService (known to work on iOS)
       await _apiService.registerFcmToken(token, platform);
-      debugPrint('📱 FCM token registered with backend ($platform)');
+      debugPrint('📱 FCM token registered with backend ($platform) auth=${authToken != null}');
     } catch (e) {
       debugPrint('📱 FCM token registration error (non-fatal): $e');
     }
@@ -202,9 +198,6 @@ class NotificationService {
 
   /// Register FCM token after login (call once auth token is available)
   Future<void> registerTokenAfterLogin() async {
-    // Stage 1: prove this function is executing — fire unconditionally, no auth needed
-    _sendDiagnostic({'stage': 'start', 'platform': Platform.isIOS ? 'ios' : 'android'});
-
     try {
       // On iOS, requestPermission() triggers registerForRemoteNotifications(),
       // which is required before getToken() can return an APNs-backed FCM token.
@@ -222,51 +215,42 @@ class NotificationService {
         await Future.delayed(const Duration(seconds: 3));
       }
 
-      // Stage 2: report token result and auth state
       final authToken = _ref.read(authTokenProvider);
-      _sendDiagnostic({
-        'stage': 'post-token',
-        'fcm': token != null ? 'ok' : 'null',
-        'auth': authToken != null ? 'ok' : 'null',
-        'platform': Platform.isIOS ? 'ios' : 'android',
-      });
+
+      // Diagnostic: report token + auth status via _apiService (known working on iOS)
+      try {
+        await _apiService.sendDiagnostic({
+          'stage': 'post-token',
+          'fcm': token != null ? 'ok' : 'null',
+          'auth': authToken != null ? 'ok' : 'null',
+          'platform': Platform.isIOS ? 'ios' : 'android',
+        });
+      } catch (e) {
+        debugPrint('📱 post-token diagnostic error: $e');
+      }
 
       if (token != null) {
         await _registerToken(token);
       } else {
-        debugPrint('📱 FCM token unavailable after retries — check iOS notification permissions');
+        debugPrint('📱 FCM token unavailable after retries');
         if (!kIsWeb && Platform.isIOS) {
+          final apnsToken = await _messaging.getAPNSToken().catchError((_) => null);
+          debugPrint('📱 APNs token available: ${apnsToken != null}');
           try {
-            final apnsToken = await _messaging.getAPNSToken();
-            debugPrint('📱 APNs token available: ${apnsToken != null}');
-            _sendDiagnostic({
+            await _apiService.sendDiagnostic({
               'stage': 'apns-check',
               'apns': apnsToken != null ? 'ok' : 'null',
               'fcm': 'null',
               'auth': authToken != null ? 'ok' : 'null',
             });
           } catch (e) {
-            debugPrint('📱 Diagnostic call error: $e');
+            debugPrint('📱 apns-check diagnostic error: $e');
           }
         }
       }
     } catch (e) {
       debugPrint('📱 Post-login FCM registration error (non-fatal): $e');
-      _sendDiagnostic({'stage': 'error', 'error': e.toString().substring(0, 80)});
     }
-  }
-
-  /// Fire-and-forget diagnostic POST — no auth required, never throws.
-  void _sendDiagnostic(Map<String, dynamic> data) {
-    final dio = Dio(BaseOptions(
-      baseUrl: 'https://nuclear-motd.com',
-      connectTimeout: const Duration(seconds: 10),
-      receiveTimeout: const Duration(seconds: 10),
-    ));
-    dio.post('/device/push-diagnostic', data: data).catchError((e) {
-      debugPrint('📱 Diagnostic send error: $e');
-      return e; // satisfy catchError return type
-    });
   }
 
   /// Navigate to message detail screen when a notification is tapped
