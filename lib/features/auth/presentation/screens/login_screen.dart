@@ -166,24 +166,45 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           debugPrint('📱 Login-screen diagnostic error: $e');
         }
 
-        // Register FCM token and refresh badge after login.
-        // registerTokenAfterLogin returns a status string — we report it here
-        // because network calls from inside NotificationService fail on iOS.
+        // Firebase-only step: get FCM token (no Dio inside — Dio from
+        // NotificationService fails silently on iOS).
+        final notificationService = ref.read(notificationServiceProvider);
+        Map<String, dynamic> rtalResult = {'status': 'not-called', 'token': null};
         try {
-          final notificationService = ref.read(notificationServiceProvider);
-          final rtalStatus = await notificationService.registerTokenAfterLogin();
-          try {
-            await diagDio.post('/device/push-diagnostic', data: {
-              'stage': 'rtal-result',
-              'result': rtalStatus,
-            });
-          } catch (e) {
-            debugPrint('📱 rtal-result diagnostic error: $e');
-          }
-          await notificationService.refreshBadge();
-          debugPrint('📱 FCM token registered and badge refreshed after login');
+          rtalResult = await notificationService.registerTokenAfterLogin();
         } catch (e) {
-          debugPrint('📱 Error in post-login notification setup: $e');
+          rtalResult = {'status': 'threw:${e.toString().substring(0, 80)}', 'token': null};
+        }
+
+        // Report result using our working Dio (from login_screen WidgetRef).
+        try {
+          await diagDio.post('/device/push-diagnostic', data: {
+            'stage': 'rtal-result',
+            'result': rtalResult['status'],
+          });
+        } catch (e) {
+          debugPrint('📱 rtal-result diagnostic error: $e');
+        }
+
+        // Register FCM token using our working Dio.
+        final fcmToken = rtalResult['token'] as String?;
+        if (fcmToken != null) {
+          try {
+            final platform = Platform.isIOS ? 'ios' : 'android';
+            await diagDio.post(
+              AppConfig.deviceRegister,
+              data: {'fcm_token': fcmToken, 'platform': platform},
+            );
+            debugPrint('📱 FCM token registered via login_screen Dio');
+          } catch (e) {
+            debugPrint('📱 FCM token registration error: $e');
+          }
+        }
+
+        try {
+          await notificationService.refreshBadge();
+        } catch (e) {
+          debugPrint('📱 Badge refresh error: $e');
         }
 
         // Navigate to pending deep link (notification tap) or home

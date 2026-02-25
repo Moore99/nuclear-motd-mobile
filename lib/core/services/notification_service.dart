@@ -196,10 +196,12 @@ class NotificationService {
   }
 
   /// Register FCM token after login (call once auth token is available).
-  /// Returns a diagnostic string describing what happened — caller reports it
-  /// to the server, since network calls from inside this function fail on iOS.
-  Future<String> registerTokenAfterLogin() async {
+  /// Returns a map with 'status' (diagnostic string) and 'token' (FCM token
+  /// or null). No Dio calls are made — caller handles all network operations
+  /// using its own Dio, since Dio from NotificationService fails on iOS.
+  Future<Map<String, dynamic>> registerTokenAfterLogin() async {
     final steps = <String>['entered'];
+    String? fcmToken;
     try {
       final platform = !kIsWeb && Platform.isIOS ? 'ios' : 'android';
       steps.add('platform=$platform');
@@ -219,25 +221,17 @@ class NotificationService {
         }
       }
 
-      // Single getToken() attempt with short timeout so the function always
-      // completes and rtal-result can be reported to the server.
-      String? token;
+      // Single getToken() attempt with short timeout.
       try {
-        token = await _messaging.getToken()
+        fcmToken = await _messaging.getToken()
             .timeout(const Duration(seconds: 5));
-        steps.add('getToken=${token != null ? 'ok' : 'null'}');
+        steps.add('getToken=${fcmToken != null ? 'ok' : 'null'}');
       } catch (e) {
         steps.add('getToken=error:${e.toString().substring(0, e.toString().length.clamp(0, 80))}');
       }
 
-      if (token != null) {
-        try {
-          await _registerToken(token);
-          steps.add('register=ok');
-        } catch (e) {
-          steps.add('register=error');
-        }
-      } else if (!kIsWeb && Platform.isIOS) {
+      // If token still null, check APNs token for diagnostic info.
+      if (fcmToken == null && !kIsWeb && Platform.isIOS) {
         try {
           final apnsToken = await _messaging.getAPNSToken()
               .timeout(const Duration(seconds: 3));
@@ -250,9 +244,9 @@ class NotificationService {
       steps.add('outer-error:${e.toString().substring(0, e.toString().length.clamp(0, 100))}');
     }
 
-    final result = steps.join('|');
-    debugPrint('📱 registerTokenAfterLogin: $result');
-    return result;
+    final status = steps.join('|');
+    debugPrint('📱 registerTokenAfterLogin: $status');
+    return {'status': status, 'token': fcmToken};
   }
 
   /// Navigate to message detail screen when a notification is tapped
