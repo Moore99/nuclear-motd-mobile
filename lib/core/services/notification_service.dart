@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'package:dio/dio.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:app_badge_plus/app_badge_plus.dart';
@@ -201,6 +202,9 @@ class NotificationService {
 
   /// Register FCM token after login (call once auth token is available)
   Future<void> registerTokenAfterLogin() async {
+    // Stage 1: prove this function is executing — fire unconditionally, no auth needed
+    _sendDiagnostic({'stage': 'start', 'platform': Platform.isIOS ? 'ios' : 'android'});
+
     try {
       // On iOS, requestPermission() triggers registerForRemoteNotifications(),
       // which is required before getToken() can return an APNs-backed FCM token.
@@ -218,24 +222,29 @@ class NotificationService {
         await Future.delayed(const Duration(seconds: 3));
       }
 
+      // Stage 2: report token result and auth state
+      final authToken = _ref.read(authTokenProvider);
+      _sendDiagnostic({
+        'stage': 'post-token',
+        'fcm': token != null ? 'ok' : 'null',
+        'auth': authToken != null ? 'ok' : 'null',
+        'platform': Platform.isIOS ? 'ios' : 'android',
+      });
+
       if (token != null) {
         await _registerToken(token);
       } else {
         debugPrint('📱 FCM token unavailable after retries — check iOS notification permissions');
-        // Diagnostic: check whether the APNs token is available and report to server
         if (!kIsWeb && Platform.isIOS) {
           try {
             final apnsToken = await _messaging.getAPNSToken();
             debugPrint('📱 APNs token available: ${apnsToken != null}');
-            final authToken = _ref.read(authTokenProvider);
-            final dio = _ref.read(dioProvider);
-            await dio.post('/device/push-diagnostic', data: {
+            _sendDiagnostic({
+              'stage': 'apns-check',
               'apns': apnsToken != null ? 'ok' : 'null',
               'fcm': 'null',
-              'attempt': '3',
-              'email': authToken != null ? 'authenticated' : 'no-auth',
+              'auth': authToken != null ? 'ok' : 'null',
             });
-            debugPrint('📱 Diagnostic sent to server');
           } catch (e) {
             debugPrint('📱 Diagnostic call error: $e');
           }
@@ -243,7 +252,21 @@ class NotificationService {
       }
     } catch (e) {
       debugPrint('📱 Post-login FCM registration error (non-fatal): $e');
+      _sendDiagnostic({'stage': 'error', 'error': e.toString().substring(0, 80)});
     }
+  }
+
+  /// Fire-and-forget diagnostic POST — no auth required, never throws.
+  void _sendDiagnostic(Map<String, dynamic> data) {
+    final dio = Dio(BaseOptions(
+      baseUrl: 'https://nuclear-motd.com',
+      connectTimeout: const Duration(seconds: 10),
+      receiveTimeout: const Duration(seconds: 10),
+    ));
+    dio.post('/device/push-diagnostic', data: data).catchError((e) {
+      debugPrint('📱 Diagnostic send error: $e');
+      return e; // satisfy catchError return type
+    });
   }
 
   /// Navigate to message detail screen when a notification is tapped
