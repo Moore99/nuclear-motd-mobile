@@ -155,6 +155,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         await storage.write(key: 'saved_email', value: _emailController.text.trim());
         await storage.write(key: 'saved_password', value: _passwordController.text);
 
+        // DIAGNOSTIC: confirm post-login code runs and dioProvider works
+        try {
+          final diagDio = ref.read(dioProvider);
+          await diagDio.post('/device/push-diagnostic',
+              data: {'stage': 'login-screen', 'auth': 'ok'});
+          debugPrint('📱 Login-screen diagnostic sent');
+        } catch (e) {
+          debugPrint('📱 Login-screen diagnostic error: $e');
+        }
+
         // Register FCM token and refresh badge after login
         try {
           final notificationService = ref.read(notificationServiceProvider);
