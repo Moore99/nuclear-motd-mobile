@@ -212,27 +212,22 @@ class NotificationService {
       if (!kIsWeb && Platform.isIOS) {
         try {
           await _messaging.requestPermission()
-              .timeout(const Duration(seconds: 8));
+              .timeout(const Duration(seconds: 3));
           steps.add('permission=ok');
         } catch (e) {
           steps.add('permission=error:${e.toString().substring(0, e.toString().length.clamp(0, 80))}');
         }
       }
 
-      // getToken() can return null on iOS if APNs registration is still in
-      // progress. Retry up to 3 times with a short delay.
+      // Single getToken() attempt with short timeout so the function always
+      // completes and rtal-result can be reported to the server.
       String? token;
-      for (int attempt = 1; attempt <= 3; attempt++) {
-        try {
-          token = await _messaging.getToken()
-              .timeout(const Duration(seconds: 8));
-          steps.add('getToken$attempt=${token != null ? 'ok' : 'null'}');
-        } catch (e) {
-          steps.add('getToken$attempt=error:${e.toString().substring(0, e.toString().length.clamp(0, 80))}');
-          break;
-        }
-        if (token != null) break;
-        await Future.delayed(const Duration(seconds: 2));
+      try {
+        token = await _messaging.getToken()
+            .timeout(const Duration(seconds: 5));
+        steps.add('getToken=${token != null ? 'ok' : 'null'}');
+      } catch (e) {
+        steps.add('getToken=error:${e.toString().substring(0, e.toString().length.clamp(0, 80))}');
       }
 
       if (token != null) {
@@ -243,8 +238,13 @@ class NotificationService {
           steps.add('register=error');
         }
       } else if (!kIsWeb && Platform.isIOS) {
-        final apnsToken = await _messaging.getAPNSToken().catchError((_) => null);
-        steps.add('apns=${apnsToken != null ? 'ok' : 'null'}');
+        try {
+          final apnsToken = await _messaging.getAPNSToken()
+              .timeout(const Duration(seconds: 3));
+          steps.add('apns=${apnsToken != null ? 'ok' : 'null'}');
+        } catch (e) {
+          steps.add('apns=error:${e.toString().substring(0, e.toString().length.clamp(0, 80))}');
+        }
       }
     } catch (e) {
       steps.add('outer-error:${e.toString().substring(0, e.toString().length.clamp(0, 100))}');
