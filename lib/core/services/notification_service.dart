@@ -198,6 +198,16 @@ class NotificationService {
 
   /// Register FCM token after login (call once auth token is available)
   Future<void> registerTokenAfterLogin() async {
+    // Diagnostic: confirm function is entered (synchronous — no await before this)
+    try {
+      await _apiService.sendDiagnostic({
+        'stage': 'rtal-start',
+        'platform': !kIsWeb && Platform.isIOS ? 'ios' : 'android',
+      });
+    } catch (e) {
+      debugPrint('📱 rtal-start diagnostic error: $e');
+    }
+
     try {
       // On iOS, requestPermission() triggers registerForRemoteNotifications(),
       // which is required before getToken() can return an APNs-backed FCM token.
@@ -205,11 +215,24 @@ class NotificationService {
         await _messaging.requestPermission();
       }
 
+      try {
+        await _apiService.sendDiagnostic({'stage': 'post-permission'});
+      } catch (e) {
+        debugPrint('📱 post-permission diagnostic error: $e');
+      }
+
       // getToken() can return null on iOS if APNs registration is still in
       // progress. Retry up to 3 times with a short delay.
       String? token;
+      String? getTokenError;
       for (int attempt = 1; attempt <= 3; attempt++) {
-        token = await _messaging.getToken();
+        try {
+          token = await _messaging.getToken();
+        } catch (e) {
+          getTokenError = e.toString();
+          debugPrint('📱 FCM getToken attempt $attempt threw: $e');
+          break;
+        }
         if (token != null) break;
         debugPrint('📱 FCM getToken attempt $attempt returned null, retrying...');
         await Future.delayed(const Duration(seconds: 3));
@@ -224,6 +247,7 @@ class NotificationService {
           'fcm': token != null ? 'ok' : 'null',
           'auth': authToken != null ? 'ok' : 'null',
           'platform': Platform.isIOS ? 'ios' : 'android',
+          if (getTokenError != null) 'error': getTokenError.substring(0, getTokenError.length.clamp(0, 200)),
         });
       } catch (e) {
         debugPrint('📱 post-token diagnostic error: $e');
@@ -250,6 +274,14 @@ class NotificationService {
       }
     } catch (e) {
       debugPrint('📱 Post-login FCM registration error (non-fatal): $e');
+      // Report the exception so we can see it server-side
+      try {
+        final msg = e.toString();
+        await _apiService.sendDiagnostic({
+          'stage': 'rtal-error',
+          'error': msg.substring(0, msg.length.clamp(0, 200)),
+        });
+      } catch (_) {}
     }
   }
 
