@@ -222,6 +222,21 @@ class NotificationService {
         await _registerToken(token);
       } else {
         debugPrint('📱 FCM token unavailable after retries — check iOS notification permissions');
+        // Diagnostic: check whether the APNs token is available and report to server
+        if (!kIsWeb && Platform.isIOS) {
+          try {
+            final apnsToken = await _messaging.getAPNSToken();
+            debugPrint('📱 APNs token available: ${apnsToken != null}');
+            final dio = _ref.read(dioProvider);
+            await dio.get('/health', queryParameters: {
+              'diag': 'ios_fcm',
+              'apns': apnsToken != null ? 'ok' : 'null',
+              'fcm': 'null',
+            });
+          } catch (e) {
+            debugPrint('📱 Diagnostic call error: $e');
+          }
+        }
       }
     } catch (e) {
       debugPrint('📱 Post-login FCM registration error (non-fatal): $e');
