@@ -1,5 +1,7 @@
 import Flutter
 import UIKit
+import FirebaseCore
+import FirebaseMessaging
 import google_mobile_ads
 
 // MARK: - Native Ad Factory
@@ -117,5 +119,19 @@ class ListTileNativeAdFactory: NSObject, FLTNativeAdFactory {
 
     GeneratedPluginRegistrant.register(with: self)
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
+  }
+
+  /// Explicitly forward the APNs device token to Firebase Messaging.
+  /// Belt-and-suspenders alongside FirebaseAppDelegateProxyEnabled swizzling.
+  /// Safe here because registerForRemoteNotifications() is only triggered by
+  /// requestPermission() from Dart, which runs AFTER Firebase.initializeApp().
+  override func application(
+    _ application: UIApplication,
+    didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data
+  ) {
+    if FirebaseApp.app() != nil {
+      Messaging.messaging().apnsToken = deviceToken
+    }
+    super.application(application, didRegisterForRemoteNotificationsWithDeviceToken: deviceToken)
   }
 }
