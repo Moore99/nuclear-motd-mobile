@@ -11,7 +11,7 @@ import 'package:local_auth/local_auth.dart';
 import '../../../../core/config/app_config.dart';
 import '../../../../core/network/dio_client.dart';
 import '../../../../core/router/app_router.dart';
-import '../../../../core/services/notification_service.dart' show notificationServiceProvider, pendingDeepLinkProvider;
+import '../../../../core/services/notification_service.dart' show NotificationService, notificationServiceProvider, pendingDeepLinkProvider;
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/atom_logo.dart';
 import '../../../profile/presentation/screens/about_screen.dart';
