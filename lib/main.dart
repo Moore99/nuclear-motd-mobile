@@ -79,7 +79,22 @@ void main() async {
     if (_isMobilePlatform) {
       debugPrint('📱 Initializing Firebase...');
       try {
-        await Firebase.initializeApp();
+        if (!kIsWeb && Platform.isIOS) {
+          // Provide explicit options for iOS — avoids relying on GoogleService-Info.plist
+          // being correctly embedded in the Xcode bundle, which causes [core/not-initialized].
+          await Firebase.initializeApp(
+            options: const FirebaseOptions(
+              apiKey: 'AIzaSyCUpSqF9tUtS6okZ4_-CtsY6wm0IQBFPO8',
+              appId: '1:505374206804:ios:b8ac8138ab7eaaefe476c1',
+              messagingSenderId: '505374206804',
+              projectId: 'nuclear-motd',
+              storageBucket: 'nuclear-motd.firebasestorage.app',
+              iosBundleId: 'com.nuclearmotd.app',
+            ),
+          );
+        } else {
+          await Firebase.initializeApp();
+        }
         // Enable Crashlytics in release builds only
         await FirebaseCrashlytics.instance.setCrashlyticsCollectionEnabled(kReleaseMode);
         // NOW safe to wire Crashlytics error handlers (Firebase is initialized)
