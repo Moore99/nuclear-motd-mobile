@@ -149,11 +149,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         // Update provider
         ref.read(authTokenProvider.notifier).state = data['access_token'];
 
-        // Always save credentials � needed for silent re-login on 401
-        // and for biometric login on next app open.
-        final storage = ref.read(secureStorageProvider);
-        await storage.write(key: 'saved_email', value: _emailController.text.trim());
-        await storage.write(key: 'saved_password', value: _passwordController.text);
+        // Save credentials for silent re-login on 401 and biometric login (non-fatal)
+        try {
+          final storage = ref.read(secureStorageProvider);
+          await storage.write(key: 'saved_email', value: _emailController.text.trim());
+          await storage.write(key: 'saved_password', value: _passwordController.text);
+        } catch (e) {
+          debugPrint('📱 Credential save error (non-fatal): $e');
+        }
 
         // DIAGNOSTIC: confirm post-login code runs and dioProvider works
         // Keep diagDio in scope so we can pass it to registerTokenAfterLogin
@@ -166,14 +169,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           debugPrint('📱 Login-screen diagnostic error: $e');
         }
 
-        // Firebase-only step: get FCM token (no Dio inside — Dio from
-        // NotificationService fails silently on iOS).
-        final notificationService = ref.read(notificationServiceProvider);
+        // Firebase/notification setup — non-fatal if provider init or token fetch throws
+        NotificationService? notificationService;
         Map<String, dynamic> rtalResult = {'status': 'not-called', 'token': null};
         try {
+          notificationService = ref.read(notificationServiceProvider);
           rtalResult = await notificationService.registerTokenAfterLogin();
         } catch (e) {
           rtalResult = {'status': 'threw:${e.toString().substring(0, 80)}', 'token': null};
+          debugPrint('📱 NotificationService/rtal error: $e');
         }
 
         // Report result using our working Dio (from login_screen WidgetRef).
@@ -202,7 +206,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         }
 
         try {
-          await notificationService.refreshBadge();
+          await notificationService?.refreshBadge();
         } catch (e) {
           debugPrint('📱 Badge refresh error: $e');
         }
@@ -225,6 +229,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         _errorMessage = e.friendlyMessage;
       });
     } catch (e) {
+      debugPrint('📱 Login unexpected error: $e (type: ${e.runtimeType})');
       setState(() {
         _errorMessage = 'An unexpected error occurred.';
       });
