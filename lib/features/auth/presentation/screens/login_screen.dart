@@ -170,11 +170,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         }
 
         // Firebase/notification setup — non-fatal if provider init or token fetch throws
+        // Use local `ns` (non-null inferred) for the call to avoid nullable type issues.
         NotificationService? notificationService;
         Map<String, dynamic> rtalResult = {'status': 'not-called', 'token': null};
         try {
-          notificationService = ref.read(notificationServiceProvider);
-          rtalResult = await notificationService.registerTokenAfterLogin();
+          final ns = ref.read(notificationServiceProvider);
+          notificationService = ns;
+          rtalResult = await ns.registerTokenAfterLogin();
         } catch (e) {
           rtalResult = {'status': 'threw:${e.toString().substring(0, 80)}', 'token': null};
           debugPrint('📱 NotificationService/rtal error: $e');
