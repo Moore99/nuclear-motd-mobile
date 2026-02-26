@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:app_badge_plus/app_badge_plus.dart';
@@ -25,7 +26,10 @@ final notificationServiceProvider = Provider<NotificationService>((ref) {
 class NotificationService {
   final ApiService _apiService;
   final Ref _ref;
-  final FirebaseMessaging _messaging = FirebaseMessaging.instance;
+  // Getter instead of field: avoids accessing FirebaseMessaging.instance in the
+  // constructor, which throws [core/no-app] if Firebase.initializeApp() failed
+  // silently in main.dart. Error is surfaced inside registerTokenAfterLogin().
+  FirebaseMessaging get _messaging => FirebaseMessaging.instance;
   // Null on iOS — instantiating FlutterLocalNotificationsPlugin on iOS hijacks
   // UNUserNotificationCenter delegate, blocking Firebase from receiving the
   // APNs token and making getToken() return null.
@@ -208,6 +212,20 @@ class NotificationService {
 
       final authToken = _ref.read(authTokenProvider);
       steps.add('auth=${authToken != null ? 'ok' : 'null'}');
+
+      // Check Firebase initialization state — surfaces silent failure from main.dart
+      final firebaseApps = Firebase.apps;
+      if (firebaseApps.isEmpty) {
+        steps.add('firebase=not-initialized');
+        try {
+          await Firebase.initializeApp();
+          steps.add('firebase-reinit=ok');
+        } catch (e) {
+          steps.add('firebase-reinit=error:${e.toString().substring(0, e.toString().length.clamp(0, 80))}');
+        }
+      } else {
+        steps.add('firebase=ok(${firebaseApps.length})');
+      }
 
       // On iOS, requestPermission() triggers registerForRemoteNotifications(),
       // which is required before getToken() can return an APNs-backed FCM token.
